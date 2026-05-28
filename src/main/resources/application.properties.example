@@ -1,0 +1,13 @@
+spring.application.name=Task Tracker
+spring.datasource.url=jdbc:postgresql://localhost:5432/yourdbname
+spring.datasource.username=yourusername
+spring.datasource.password=yourpassword
+
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+spring.jpa.open-in-view=false
+
+# DEBUG - uncomment for debugging
+# logging.level.org.springframework.web=DEBUG
+# logging.level.org.example.task_tracker=DEBUG

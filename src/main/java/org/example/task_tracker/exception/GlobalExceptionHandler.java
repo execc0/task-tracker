@@ -1,0 +1,61 @@
+package org.example.task_tracker.exception;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@ControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<Object> handleNotFound (ResourceNotFoundException e) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("status", 404);
+        map.put("message", e.getMessage());
+        return new ResponseEntity<Object>(map, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Object> handleInvalidData(HttpMessageNotReadableException e) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("status", 400);
+        map.put("message", "Неверный формат JSON или неверный тип данных одного из значений");
+        return new ResponseEntity<>(map, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Object> handleExceptions (Exception e) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("status", 500);
+        map.put("message", "Внутренняя ошибка сервера / Internal server error");
+        return new ResponseEntity<Object>(map, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Object> handleValidation(MethodArgumentNotValidException e) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("status", 400);
+        List<String> errors = e.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .toList();
+        map.put("errors", errors);
+        return new ResponseEntity<>(map, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<Object> handleIllegalStatus(IllegalStateException e) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("status", 400);
+        map.put("errors", e.getMessage());
+        return new ResponseEntity<>(map, HttpStatus.BAD_REQUEST);
+    }
+
+}

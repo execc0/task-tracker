@@ -2,13 +2,16 @@ package org.example.task_tracker.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
 
 @Entity
 @Table(name = "tasks")
+@Getter
+@Setter
 public class Task {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,14 +30,6 @@ public class Task {
 
     public Task() {}
 
-    public Task(String title, Status status, Priority priority, LocalDateTime deadline, long userId) {
-        this.title = title;
-        this.status = status;
-        this.priority = priority;
-        this.deadline = deadline;
-        this.userId = userId;
-    }
-
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -46,51 +41,4 @@ public class Task {
         }
     }
 
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public void setStatus(Status status) {
-        this.status = status;
-    }
-
-    public void setPriority(Priority priority) {
-        this.priority = priority;
-    }
-
-    public void setDeadline(LocalDateTime deadline) {
-        this.deadline = deadline;
-    }
-
-    public void setUserId(long userId) {
-        this.userId = userId;
-    }
-
-    public String getTitle() {
-        return this.title;
-    }
-
-    public Status getStatus() {
-        return this.status;
-    }
-
-    public Priority getPriority() {
-        return this.priority;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return this.createdAt;
-    }
-
-    public LocalDateTime getDeadline() {
-        return this.deadline;
-    }
-
-    public long getUserId() {
-        return this.userId;
-    }
-
-    public long getId() {
-        return this.id;
-    }
 }

@@ -1,4 +1,7 @@
 package org.example.task_tracker.exception;
+import jakarta.validation.Constraint;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -51,10 +54,22 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(IllegalStateException.class)
-    public ResponseEntity<Object> handleIllegalStatus(IllegalStateException e) {
+    public ResponseEntity<Object> handleIllegalState(IllegalStateException e) {
         Map<String, Object> map = new HashMap<>();
         map.put("status", 400);
         map.put("errors", e.getMessage());
+        return new ResponseEntity<>(map, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<Object> handleConstraintViolation(ConstraintViolationException e) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("status", 400);
+        List<String> errors = e.getConstraintViolations()
+                .stream()
+                .map(violation -> violation.getMessage())
+                .toList();
+        map.put("errors", errors);
         return new ResponseEntity<>(map, HttpStatus.BAD_REQUEST);
     }
 

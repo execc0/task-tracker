@@ -64,4 +64,8 @@ public class TaskService {
         taskToUpdate.setUserId(updatedTask.getUserId());
         return taskRepository.save(taskToUpdate);
     }
+
+    public List<Task> findTasksByUserId(Long id) {
+        return taskRepository.findTasksByUserId(id);
+    }
 }

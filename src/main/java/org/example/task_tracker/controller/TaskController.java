@@ -27,6 +27,11 @@ public class TaskController {
         return taskService.getTaskById(id);
     }
 
+    @GetMapping("/user/{userId}")
+    public List<Task> getTasksByUserId(@PathVariable Long userId) {
+        return taskService.findTasksByUserId(userId);
+    }
+
     @PostMapping
     public Task createTask(@Valid @RequestBody Task task) {
         return taskService.createTask(task);
@@ -44,4 +49,6 @@ public class TaskController {
     public void deleteTask(@PathVariable Long id) {
         taskService.deleteTask(id);
     }
+
+
 }

@@ -26,6 +26,7 @@ public class Task {
     @Column(updatable = false)
     private LocalDateTime createdAt;
     private LocalDateTime deadline;
+    private String description;
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;

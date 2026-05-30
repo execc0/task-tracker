@@ -3,7 +3,7 @@ spring.datasource.url=jdbc:postgresql://localhost:5432/yourdbname
 spring.datasource.username=yourusername
 spring.datasource.password=yourpassword
 
-spring.jpa.hibernate.ddl-auto=update
+spring.jpa.hibernate.ddl-auto=validate
 spring.jpa.show-sql=true
 spring.jpa.properties.hibernate.format_sql=true
 spring.jpa.open-in-view=false
@@ -11,6 +11,9 @@ spring.jpa.open-in-view=false
 # DEBUG - uncomment for debugging
 # logging.level.org.springframework.web=DEBUG
 # logging.level.org.example.task_tracker=DEBUG
+
+# Liquibase
+spring.liquibase.change-log=classpath:db/changelog/db.changelog-master.yaml
 
 # Kafka
 spring.kafka.bootstrap-servers=localhost:9092

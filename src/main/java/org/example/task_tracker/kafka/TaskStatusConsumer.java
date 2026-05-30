@@ -10,7 +10,16 @@ public class TaskStatusConsumer {
 
     @KafkaListener(topics = KafkaTopics.TASK_STATUS_CHANGED, groupId = "task-tracker-group")
     public void onStatusChange(String message) {
-        log.info("Получено сообщение из Kafka: {}", message);
+        try {
+            log.info("Получено сообщение из Kafka: {}", message);
+            processMessage(message);
+        } catch (Exception e) {
+            log.error("Ошибка при обработке сообщение из Kafka: {}, сообщение: {}", message, e.getMessage());
+            throw e;
+        }
+    }
 
+    private void processMessage(String message) {
+        log.info("Сообщение успешно обработно: {}", message);
     }
 }

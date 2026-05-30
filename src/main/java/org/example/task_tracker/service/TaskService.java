@@ -61,7 +61,7 @@ public class TaskService {
         taskToUpdate.setTitle(updatedTask.getTitle());
         taskToUpdate.setDeadline(updatedTask.getDeadline());
         taskToUpdate.setPriority(updatedTask.getPriority());
-        taskToUpdate.setUserId(updatedTask.getUserId());
+        taskToUpdate.setUser(updatedTask.getUser());
         return taskRepository.save(taskToUpdate);
     }
 

@@ -26,7 +26,9 @@ public class Task {
     @Column(updatable = false)
     private LocalDateTime createdAt;
     private LocalDateTime deadline;
-    private long userId;
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
 
     public Task() {}
 

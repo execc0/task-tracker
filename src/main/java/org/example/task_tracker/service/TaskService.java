@@ -1,6 +1,7 @@
 package org.example.task_tracker.service;
 
 import org.example.task_tracker.exception.ResourceNotFoundException;
+import org.example.task_tracker.kafka.TaskStatusProducer;
 import org.example.task_tracker.model.Status;
 import org.example.task_tracker.model.Task;
 import org.springframework.stereotype.Service;
@@ -10,9 +11,11 @@ import java.util.List;
 
 @Service
 public class TaskService {
+    private final TaskStatusProducer producer;
     private final TaskRepository taskRepository;
 
-    public TaskService(TaskRepository taskRepository) {
+    public TaskService(TaskStatusProducer producer, TaskRepository taskRepository) {
+        this.producer = producer;
         this.taskRepository = taskRepository;
     }
 
@@ -47,6 +50,7 @@ public class TaskService {
             throw new IllegalStateException("Нельзя изменить статус задачи с IN PROGRESS на TODO");
         }
         task.setStatus(status);
+        producer.sendStatusChange(id, task.getUser().getId(), status.name());
         return taskRepository.save(task);
     }
 

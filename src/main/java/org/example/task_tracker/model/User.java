@@ -37,7 +37,6 @@ public class User implements UserDetails {
 
     @Column(nullable=false)
     @NotBlank(message = "Password не может быть пустым")
-    @JsonIgnore
     private String password;
 
     @Column(nullable = false)
@@ -49,6 +48,7 @@ public class User implements UserDetails {
     }
 
     @Override
+    @JsonIgnore
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
     }

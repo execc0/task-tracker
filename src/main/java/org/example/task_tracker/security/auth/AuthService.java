@@ -31,6 +31,7 @@ public class AuthService {
         if (userRepository.findUserByEmail(request.getEmail()).isPresent()) {
             throw new UserAlreadyExistsException("Пользователь с данным email уже зарегистрирован!");
         }
+        if (request.getPassword().length() < 8) throw new IllegalStateException("Пароль должен быть не менее 8 символов");
         User user = new User();
         user.setEmail(request.getEmail());
         user.setName(request.getName());

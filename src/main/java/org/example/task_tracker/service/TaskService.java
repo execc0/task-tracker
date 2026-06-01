@@ -4,9 +4,11 @@ import org.example.task_tracker.exception.ResourceNotFoundException;
 import org.example.task_tracker.kafka.TaskStatusProducer;
 import org.example.task_tracker.model.Status;
 import org.example.task_tracker.model.Task;
+import org.example.task_tracker.model.User;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.example.task_tracker.repository.TaskRepository;
-
+import org.springframework.security.access.AccessDeniedException;
 import java.util.List;
 
 @Service
@@ -18,14 +20,6 @@ public class TaskService {
         this.producer = producer;
         this.taskRepository = taskRepository;
     }
-
-    public Task createTask(String title) {
-        Task task = new Task();
-        task.setTitle(title);
-        task.setStatus(Status.TODO);
-        return taskRepository.save(task);
-    }
-
 
     public Task createTask(Task task) {
         return taskRepository.save(task);
@@ -56,6 +50,24 @@ public class TaskService {
 
     public void deleteTask(Long id) {
         taskRepository.deleteById(id);
+    }
+
+    public List <Task> getOwnTasks() {
+        User user = (User) SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getPrincipal();
+        return taskRepository.findTasksByUserId(user.getId());
+    }
+
+    public Task getOwnTask(Long id) {
+        User user = (User) SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getPrincipal();
+        if (!(id == user.getId())) {
+            throw new AccessDeniedException("Доступ запрещён");
+        }
+        return taskRepository.findTaskById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(String.format("Задача с id %d не найдена", id)));
     }
 
     public Task updateTask(Long id, Task updatedTask) {

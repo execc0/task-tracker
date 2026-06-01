@@ -1,17 +1,25 @@
 package org.example.task_tracker.service;
 
+import io.jsonwebtoken.security.Password;
 import org.example.task_tracker.exception.ResourceNotFoundException;
+import org.example.task_tracker.exception.UserAlreadyExistsException;
+import org.example.task_tracker.model.Role;
 import org.example.task_tracker.model.User;
 import org.example.task_tracker.repository.UserRepository;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
 public class UserService {
+
+    private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(PasswordEncoder passwordEncoder, UserRepository userRepository) {
+        this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
     }
 
@@ -32,7 +40,30 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public User createUser(User user) {
+    public User updateOwnEmail(String email) {
+        if (userRepository.findUserByEmail(email).isPresent()) { throw new UserAlreadyExistsException("Данный email уже занят"); }
+        User user = getCurrentUser();
+        user.setEmail(email);
+        return userRepository.save(user);
+    }
+
+    public User updateOwnUsername(String username) {
+        if (userRepository.findUserByUsername(username).isPresent()) { throw new UserAlreadyExistsException("Данный username уже занят"); }
+        User user = getCurrentUser();
+        user.setUsername(username);
+        return userRepository.save(user);
+    }
+
+    public User updateOwnName(String name) {
+        User user = getCurrentUser();
+        user.setName(name);
+        return userRepository.save(user);
+    }
+
+    public User updateOwnPassword(String password) {
+        if(password.length() < 8) throw new IllegalArgumentException("Пароль должен быть не менее 8 символов");
+        User user = getCurrentUser();
+        user.setPassword(passwordEncoder.encode(password));
         return userRepository.save(user);
     }
 
@@ -50,5 +81,19 @@ public class UserService {
         userToUpdate.setName(user.getName());
         return userRepository.save(userToUpdate);
 
+    }
+
+    public User getCurrentUser() {
+        User user = (User) SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getPrincipal();
+        return user;
+    }
+
+    public User updateUserRole(Role role, Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Пользователь с данным id не найден"));
+        user.setRole(role);
+        return userRepository.save(user);
     }
 }

@@ -81,4 +81,11 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(map, HttpStatus.UNAUTHORIZED);
     }
 
+    @ExceptionHandler(UserAlreadyExistsException.class)
+    public ResponseEntity<Object> handleUserAlreadyExists(UserAlreadyExistsException e) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("status", 400);
+        map.put("message", e.getMessage());
+        return new ResponseEntity<>(map, HttpStatus.UNAUTHORIZED);
+    }
 }

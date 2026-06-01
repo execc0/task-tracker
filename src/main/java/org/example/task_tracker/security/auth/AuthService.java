@@ -1,5 +1,6 @@
 package org.example.task_tracker.security.auth;
 
+import org.example.task_tracker.exception.UserAlreadyExistsException;
 import org.example.task_tracker.model.User;
 import org.example.task_tracker.repository.UserRepository;
 import org.example.task_tracker.security.UserDetailsServiceImplementation;
@@ -24,6 +25,12 @@ public class AuthService {
     }
 
     public User register(RegisterRequest request) {
+        if (userRepository.findUserByUsername(request.getUsername()).isPresent()) {
+            throw new UserAlreadyExistsException("Пользователь с данным username уже зарегистрирован!");
+        }
+        if (userRepository.findUserByEmail(request.getEmail()).isPresent()) {
+            throw new UserAlreadyExistsException("Пользователь с данным email уже зарегистрирован!");
+        }
         User user = new User();
         user.setEmail(request.getEmail());
         user.setName(request.getName());

@@ -1,8 +1,10 @@
 package org.example.task_tracker.exception;
 import jakarta.validation.ConstraintViolationException;
+import org.hibernate.type.descriptor.java.ObjectJavaType;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -69,6 +71,14 @@ public class GlobalExceptionHandler {
                 .toList();
         map.put("errors", errors);
         return new ResponseEntity<>(map, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<Object> handleBadCredentials(BadCredentialsException e) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("status", 401);
+        map.put("message", "Неверный username или password");
+        return new ResponseEntity<>(map, HttpStatus.UNAUTHORIZED);
     }
 
 }

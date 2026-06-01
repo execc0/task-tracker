@@ -16,17 +16,24 @@ public class Task {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
+
     @Column(nullable = false)
     @NotBlank(message = "Название не может быть пустым")
     private String title;
+
     @Enumerated(EnumType.STRING)
     private Status status;
+
     @Enumerated(EnumType.STRING)
     private Priority priority;
+
     @Column(updatable = false)
     private LocalDateTime createdAt;
+
     private LocalDateTime deadline;
+
     private String description;
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;

@@ -12,6 +12,11 @@ spring.jpa.open-in-view=false
 # logging.level.org.springframework.web=DEBUG
 # logging.level.org.example.task_tracker=DEBUG
 
+# JWT
+jwt.secret=${JWT_KEY}
+# Время жизни токена в милисекундах (86400000 = 24 часа)
+jwt.expiration=86400000
+
 # Liquibase
 spring.liquibase.change-log=classpath:db/changelog/db.changelog-master.yaml
 

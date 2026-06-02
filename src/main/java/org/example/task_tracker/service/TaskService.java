@@ -40,24 +40,6 @@ public class TaskService {
         return taskRepository.findAll();
     }
 
-    public Task updateTaskStatus(Long id, Status status) {
-        Task task = taskRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Задача не найдена - указан неверный id"));
-        if (task.getStatus() == Status.DONE) {
-            throw new IllegalStateException("Нельзя изменить статус завершённой задачи");
-        }
-        if (task.getStatus() == Status.IN_PROGRESS && (status == Status.TODO)) {
-            throw new IllegalStateException("Нельзя изменить статус задачи с IN PROGRESS на TODO");
-        }
-        User user = userService.getCurrentUser();
-        if(task.getUser().getId() != user.getId()) {
-            throw new IllegalStateException("Задача с данным id вам не принадлежит");
-        }
-        task.setStatus(status);
-        producer.sendStatusChange(id, task.getUser().getId(), status.name());
-        return taskRepository.save(task);
-    }
-
     public void deleteTask(Long id) {
         taskRepository.deleteById(id);
     }
@@ -68,6 +50,13 @@ public class TaskService {
         Task resultTask = updateTaskFields(taskToUpdate, updatedTask);
         resultTask.setUser(updatedTask.getUser());
         return taskRepository.save(resultTask);
+    }
+
+    public Task updateTaskStatus(Long id, Status status) {
+        Task task = taskRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Задача не найдена - указан неверный id"));
+        task.setStatus(status);
+        return taskRepository.save(task);
     }
 
     public List<Task> findTasksByUserId(Long id) {
@@ -111,6 +100,24 @@ public class TaskService {
         }
         Task resultTask = updateTaskFields(taskToUpdate, updatedTask);
         return taskRepository.save(resultTask);
+    }
+
+    public Task updateOwnTaskStatus(Long id, Status status) {
+        Task task = taskRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Задача не найдена - указан неверный id"));
+        if (task.getStatus() == Status.DONE) {
+            throw new IllegalStateException("Нельзя изменить статус завершённой задачи");
+        }
+        if (task.getStatus() == Status.IN_PROGRESS && (status == Status.TODO)) {
+            throw new IllegalStateException("Нельзя изменить статус задачи с IN PROGRESS на TODO");
+        }
+        User user = userService.getCurrentUser();
+        if(task.getUser().getId() != user.getId()) {
+            throw new IllegalStateException("Задача с данным id вам не принадлежит");
+        }
+        task.setStatus(status);
+        producer.sendStatusChange(id, task.getUser().getId(), status.name());
+        return taskRepository.save(task);
     }
 
     public Task takeAvailableTask(Long id) {

@@ -3,6 +3,8 @@ package org.example.task_tracker.controller;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import org.example.task_tracker.DTO.mapper.UserMapper;
+import org.example.task_tracker.DTO.response.UserResponseDTO;
 import org.example.task_tracker.model.Role;
 import org.example.task_tracker.model.User;
 import org.example.task_tracker.service.UserService;
@@ -16,22 +18,25 @@ import java.util.List;
 @RequestMapping("/users")
 @Validated
 public class UserController {
-    private final UserService userService;
 
-    public UserController(UserService userService) {
+    private final UserService userService;
+    private final UserMapper userMapper;
+
+    public UserController(UserService userService, UserMapper userMapper) {
         this.userService = userService;
+        this.userMapper = userMapper;
     }
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public List<User> getAllUsers () {
-        return userService.getAllUsers();
+    public List<UserResponseDTO> getAllUsers() {
+        return userMapper.toDTOList(userService.getAllUsers());
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public User getUserById(@PathVariable Long id) {
-        return userService.getUserById(id);
+    public UserResponseDTO getUserById(@PathVariable Long id) {
+        return userMapper.toDTO(userService.getUserById(id));
     }
 
     @DeleteMapping("/{id}")
@@ -42,47 +47,47 @@ public class UserController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public User updateUser(@Valid @RequestBody User user, @PathVariable Long id) {
-        return userService.updateUser(user, id);
+    public UserResponseDTO updateUser(@Valid @RequestBody User user, @PathVariable Long id) {
+        return userMapper.toDTO(userService.updateUser(user, id));
     }
 
     @PatchMapping("/{id}/name")
     @PreAuthorize("hasRole('ADMIN')")
-    public User updateUserName(@PathVariable Long id, @NotBlank(message = "Имя не может быть пустым") String name) {
-        return userService.updateUserName(name, id);
+    public UserResponseDTO updateUserName(@PathVariable Long id, @RequestParam @NotBlank(message = "Имя не может быть пустым") String name) {
+        return userMapper.toDTO(userService.updateUserName(name, id));
     }
 
     @PatchMapping("/{id}/email")
     @PreAuthorize("hasRole('ADMIN')")
-    public User updateUserEmail(@PathVariable Long id, @RequestParam @Email(message = "Неверный формат email") String email) {
-        return userService.updateUserEmail(email, id);
+    public UserResponseDTO updateUserEmail(@PathVariable Long id, @RequestParam @Email(message = "Неверный формат email") String email) {
+        return userMapper.toDTO(userService.updateUserEmail(email, id));
     }
 
     @PatchMapping("/{id}/role")
     @PreAuthorize("hasRole('ADMIN')")
-    public User updateUserRole(@PathVariable Long id, @RequestParam Role role) {
-        return userService.updateUserRole(role, id);
+    public UserResponseDTO updateUserRole(@PathVariable Long id, @RequestParam Role role) {
+        return userMapper.toDTO(userService.updateUserRole(role, id));
     }
 
     // Всё что ниже - эндпоинты для USER (ADMIN тоже доступны).
     @PatchMapping("/me/username")
-    public User updateOwnUsername (@RequestParam @NotBlank(message = "Username не может быть пустым") String username) {
-        return userService.updateOwnUsername(username);
+    public UserResponseDTO updateOwnUsername(@RequestParam @NotBlank(message = "Username не может быть пустым") String username) {
+        return userMapper.toDTO(userService.updateOwnUsername(username));
     }
 
     @PatchMapping("/me/email")
-    public User updateOwnEmail (@RequestParam @NotBlank(message = "Email не может быть пустым") @Email(message = "Неверный формат email") String email) {
-        return userService.updateOwnEmail(email);
+    public UserResponseDTO updateOwnEmail(@RequestParam @NotBlank(message = "Email не может быть пустым") @Email(message = "Неверный формат email") String email) {
+        return userMapper.toDTO(userService.updateOwnEmail(email));
     }
 
     @PatchMapping("/me/password")
-    public User updateOwnPassword(@RequestParam @NotBlank(message = "Password не может быть пустым") String password) {
-        return userService.updateOwnPassword(password);
+    public UserResponseDTO updateOwnPassword(@RequestParam @NotBlank(message = "Password не может быть пустым") String password) {
+        return userMapper.toDTO(userService.updateOwnPassword(password));
     }
 
     @PatchMapping("/me/name")
-    public User updateOwnName(@RequestParam @NotBlank(message = "Имя не может быть пустым") String name) {
-        return userService.updateOwnName(name);
+    public UserResponseDTO updateOwnName(@RequestParam @NotBlank(message = "Имя не может быть пустым") String name) {
+        return userMapper.toDTO(userService.updateOwnName(name));
     }
 
 }

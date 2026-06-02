@@ -1,6 +1,8 @@
 package org.example.task_tracker.controller;
 
 import jakarta.validation.Valid;
+import org.example.task_tracker.DTO.mapper.TaskMapper;
+import org.example.task_tracker.DTO.response.TaskResponseDTO;
 import org.example.task_tracker.model.Status;
 import org.example.task_tracker.model.Task;
 import org.example.task_tracker.service.TaskService;
@@ -12,40 +14,43 @@ import java.util.List;
 @RestController
 @RequestMapping("/tasks")
 public class TaskController {
-    private final TaskService taskService;
 
-    public TaskController(TaskService taskService) {
+    private final TaskService taskService;
+    private final TaskMapper taskMapper;
+
+    public TaskController(TaskService taskService, TaskMapper taskMapper) {
         this.taskService = taskService;
+        this.taskMapper = taskMapper;
     }
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public List<Task> getAllTasks() {
-        return taskService.getAllTasks();
+    public List<TaskResponseDTO> getAllTasks() {
+        return taskMapper.toDTOList(taskService.getAllTasks());
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public Task getTaskById(@PathVariable Long id) {
-        return taskService.getTaskById(id);
+    public TaskResponseDTO getTaskById(@PathVariable Long id) {
+        return taskMapper.toDTO(taskService.getTaskById(id));
     }
 
     @GetMapping("/user/{userId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public List<Task> getTasksByUserId(@PathVariable Long userId) {
-        return taskService.findTasksByUserId(userId);
+    public List<TaskResponseDTO> getTasksByUserId(@PathVariable Long userId) {
+        return taskMapper.toDTOList(taskService.findTasksByUserId(userId));
     }
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public Task createTask(@Valid @RequestBody Task task) {
-        return taskService.createTask(task);
+    public TaskResponseDTO createTask(@Valid @RequestBody Task task) {
+        return taskMapper.toDTO(taskService.createTask(task));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public Task updateTask(@PathVariable Long id, @Valid @RequestBody Task updatedTask) {
-        return taskService.updateTask(id , updatedTask);
+    public TaskResponseDTO updateTask(@PathVariable Long id, @Valid @RequestBody Task updatedTask) {
+        return taskMapper.toDTO(taskService.updateTask(id , updatedTask));
     }
 
     @DeleteMapping("/{id}")
@@ -54,41 +59,46 @@ public class TaskController {
         taskService.deleteTask(id);
     }
 
+    @PatchMapping("/{id}/status")
+    @PreAuthorize("hasRole('ADMIN')")
+    public TaskResponseDTO updateTaskStatus(@PathVariable Long id, @RequestParam Status status) {
+        return taskMapper.toDTO(taskService.updateTaskStatus(id, status));
+    }
 
     // Всё что ниже - эндпоинты для USER (для ADMIN тоже доступны).
     @GetMapping("/available")
-    public List<Task> getAvailableTasks() {
-        return taskService.getAvailableTasks();
+    public List<TaskResponseDTO> getAvailableTasks() {
+        return taskMapper.toDTOList(taskService.getAvailableTasks());
     }
 
     @PostMapping("/available/{id}")
-    public Task takeAvailableTask(@PathVariable Long id) {
-        return taskService.takeAvailableTask(id);
+    public TaskResponseDTO takeAvailableTask(@PathVariable Long id) {
+        return taskMapper.toDTO(taskService.takeAvailableTask(id));
     }
 
     @GetMapping("/my")
-    public List<Task> getOwnTasks() {
-        return taskService.getOwnTasks();
+    public List<TaskResponseDTO> getOwnTasks() {
+        return taskMapper.toDTOList(taskService.getOwnTasks());
     }
 
     @GetMapping("/my/{id}")
-    public Task getOwnTask(@PathVariable Long id) {
-        return taskService.getOwnTask(id);
+    public TaskResponseDTO getOwnTask(@PathVariable Long id) {
+        return taskMapper.toDTO(taskService.getOwnTask(id));
     }
 
     @PostMapping("/my")
-    public Task createOwnTask(@Valid @RequestBody Task task) {
-        return taskService.createOwnTask(task);
+    public TaskResponseDTO createOwnTask(@Valid @RequestBody Task task) {
+        return taskMapper.toDTO(taskService.createOwnTask(task));
     }
 
     @PutMapping("/my/{id}")
-    public Task updateOwnTask(@Valid @RequestBody Task updatedTask, @PathVariable Long id) {
-        return taskService.updateOwnTask(updatedTask, id);
+    public TaskResponseDTO updateOwnTask(@Valid @RequestBody Task updatedTask, @PathVariable Long id) {
+        return taskMapper.toDTO(taskService.updateOwnTask(updatedTask, id));
     }
 
-    @PatchMapping("/{id}/status")
-    public Task updateTaskStatus(@PathVariable Long id, @RequestParam Status status) {
-        return taskService.updateTaskStatus(id, status);
+    @PatchMapping("/my/{id}/status")
+    public TaskResponseDTO updateOwnTaskStatus(@PathVariable Long id, @RequestParam Status status) {
+        return taskMapper.toDTO(taskService.updateOwnTaskStatus(id, status));
     }
 
 }

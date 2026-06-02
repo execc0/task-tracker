@@ -54,9 +54,16 @@ public class TaskController {
         taskService.deleteTask(id);
     }
 
-    @PatchMapping("/{id}/status")
-    public Task updateTaskStatus(@PathVariable Long id, @RequestParam Status status) {
-        return taskService.updateTaskStatus(id, status);
+
+    // Всё что ниже - эндпоинты для USER (для ADMIN тоже доступны).
+    @GetMapping("/available")
+    public List<Task> getAvailableTasks() {
+        return taskService.getAvailableTasks();
+    }
+
+    @PostMapping("/available/{id}")
+    public Task takeAvailableTask(@PathVariable Long id) {
+        return taskService.takeAvailableTask(id);
     }
 
     @GetMapping("/my")
@@ -67,6 +74,21 @@ public class TaskController {
     @GetMapping("/my/{id}")
     public Task getOwnTask(@PathVariable Long id) {
         return taskService.getOwnTask(id);
+    }
+
+    @PostMapping("/my")
+    public Task createOwnTask(@Valid @RequestBody Task task) {
+        return taskService.createOwnTask(task);
+    }
+
+    @PutMapping("/my/{id}")
+    public Task updateOwnTask(@Valid @RequestBody Task updatedTask, @PathVariable Long id) {
+        return taskService.updateOwnTask(updatedTask, id);
+    }
+
+    @PatchMapping("/{id}/status")
+    public Task updateTaskStatus(@PathVariable Long id, @RequestParam Status status) {
+        return taskService.updateTaskStatus(id, status);
     }
 
 }

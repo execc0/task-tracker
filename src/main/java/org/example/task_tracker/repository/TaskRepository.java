@@ -1,5 +1,6 @@
 package org.example.task_tracker.repository;
 
+import org.example.task_tracker.model.Status;
 import org.example.task_tracker.model.Task;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -11,4 +12,6 @@ import java.util.Optional;
 public interface TaskRepository extends JpaRepository<Task, Long>{
     List<Task> findTasksByUserId(long userId);
     Optional<Task> findTaskById(Long id);
+    Long countTasksByUserIdAndStatusIn(long id, List<Status> statusList);
+    List<Task> findTasksByUserIsNull();
 }

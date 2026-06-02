@@ -59,10 +59,12 @@ public class UserController {
     }
 
     @PatchMapping("/{id}/role")
+    @PreAuthorize("hasRole('ADMIN')")
     public User updateUserRole(@PathVariable Long id, @RequestParam Role role) {
         return userService.updateUserRole(role, id);
     }
 
+    // Всё что ниже - эндпоинты для USER (ADMIN тоже доступны).
     @PatchMapping("/me/username")
     public User updateOwnUsername (@RequestParam @NotBlank(message = "Username не может быть пустым") String username) {
         return userService.updateOwnUsername(username);

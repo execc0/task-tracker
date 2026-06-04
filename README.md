@@ -44,11 +44,19 @@ POSTGRES_USER=your_user
 POSTGRES_PASSWORD=your_password
 ```
 
-### 3. Указать секретный ключ JWT
-В IntelliJ IDEA: **Run Configuration → Environment Variables**
-```
-JWT_KEY=your_secret_key_here
-```
+### 3. JWT Secret Key
+
+Задаётся через переменную окружения `JWT_KEY`.
+
+**Сгенерировать ключ:** `openssl rand -base64 64`
+
+**IntelliJ IDEA:** Run Configuration → Environment Variables → `JWT_KEY=your_key`  
+
+**Terminal:** `export JWT_KEY=your_key` (Linux/Mac) или `$env:JWT_KEY="your_key"` (PowerShell)
+
+Минимальная длина ключа — 88 символов (base64-encoded, HS512)
+
+
 
 ### 4. Запустить инфраструктуру
 ```bash

@@ -10,11 +10,13 @@ import org.example.task_tracker.model.User;
 import org.example.task_tracker.repository.TaskRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
 
 @Service
 @Transactional(readOnly = true)
+@Validated
 public class TaskService {
     private final TaskStatusProducer producer;
     private final TaskRepository taskRepository;
@@ -81,11 +83,12 @@ public class TaskService {
 
     public Task getOwnTask(Long id) {
         User user = userService.getCurrentUser();
-        if (id != user.getId()) {
+        Task task = taskRepository.findTaskById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(String.format("Задача с id %d не найдена", id)));
+        if (task.getUser().getId() != user.getId()) {
             throw new IllegalStateException("Задача с данным id вам не принадлежит");
         }
-        return taskRepository.findTaskById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(String.format("Задача с id %d не найдена", id)));
+        return task;
     }
 
     @Transactional

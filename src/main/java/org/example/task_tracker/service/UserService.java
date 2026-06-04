@@ -23,15 +23,14 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    public User updateUserName(String name, Long id) {
-        User user = getUserById(id);
-        user.setName(name);
-        return userRepository.save(user);
-    }
-
+    // Методы, которые вызываются только с ролью ADMIN
     public User getUserById(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Неверно указан id пользователя"));
+    }
+
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
     }
 
     public User updateUserEmail(String email, Long id) {
@@ -40,6 +39,32 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    public User updateUser(User user, Long id) {
+        User userToUpdate = getUserById(id);
+        userToUpdate.setEmail(user.getEmail());
+        userToUpdate.setName(user.getName());
+        return userRepository.save(userToUpdate);
+
+    }
+
+    public User updateUserName(String name, Long id) {
+        User user = getUserById(id);
+        user.setName(name);
+        return userRepository.save(user);
+    }
+
+    public User updateUserRole(Role role, Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Пользователь с данным id не найден"));
+        user.setRole(role);
+        return userRepository.save(user);
+    }
+
+    public void deleteUserById(Long id) {
+        userRepository.deleteById(id);
+    }
+
+    // Всё что ниже - методы, которые вызываются с ролью USER (или ADMIN)
     public User updateOwnEmail(String email) {
         if (userRepository.findUserByEmail(email).isPresent()) { throw new UserAlreadyExistsException("Данный email уже занят"); }
         User user = getCurrentUser();
@@ -67,33 +92,12 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public void deleteUserById(Long id) {
-        userRepository.deleteById(id);
-    }
-
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
-    }
-
-    public User updateUser(User user, Long id) {
-        User userToUpdate = getUserById(id);
-        userToUpdate.setEmail(user.getEmail());
-        userToUpdate.setName(user.getName());
-        return userRepository.save(userToUpdate);
-
-    }
-
-    public User getCurrentUser() {
+    protected User getCurrentUser() {
         User user = (User) SecurityContextHolder.getContext()
                 .getAuthentication()
                 .getPrincipal();
         return user;
     }
 
-    public User updateUserRole(Role role, Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Пользователь с данным id не найден"));
-        user.setRole(role);
-        return userRepository.save(user);
-    }
+
 }

@@ -27,6 +27,8 @@ public class TaskService {
         this.userRepository = userRepository;
     }
 
+
+    // Методы, которые вызываются только с ролью ADMIN
     public Task createTask(Task task) {
         return taskRepository.save(task);
     }
@@ -63,6 +65,8 @@ public class TaskService {
         return taskRepository.findTasksByUserId(id);
     }
 
+
+    // Всё что ниже - методы, которые вызываются с ролью USER (или ADMIN)
     public List<Task> getAvailableTasks() {
         return taskRepository.findTasksByUserIsNull();
     }
@@ -91,10 +95,10 @@ public class TaskService {
         return taskRepository.save(task);
     }
 
-    public Task updateOwnTask(Task updatedTask, Long id) {
-        User user = userService.getCurrentUser();
+    public Task updateOwnTask(Long id, Task updatedTask) {
         Task taskToUpdate = taskRepository.findTaskById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Задача не найдена - указан неверный id"));
+        User user = userService.getCurrentUser();
         if (taskToUpdate.getUser() == null || taskToUpdate.getUser().getId() != user.getId()) {
             throw new ResourceNotFoundException("Задача не найдена - указан неверный id");
         }
@@ -103,7 +107,7 @@ public class TaskService {
     }
 
     public Task updateOwnTaskStatus(Long id, Status status) {
-        Task task = taskRepository.findById(id)
+        Task task = taskRepository.findTaskById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Задача не найдена - указан неверный id"));
         if (task.getStatus() == Status.DONE) {
             throw new IllegalStateException("Нельзя изменить статус завершённой задачи");
@@ -131,7 +135,7 @@ public class TaskService {
         return taskRepository.save(task);
     }
 
-    private Task updateTaskFields(Task taskToUpdate, Task updatedTask) {
+    protected Task updateTaskFields(Task taskToUpdate, Task updatedTask) {
         taskToUpdate.setTitle(updatedTask.getTitle());
         taskToUpdate.setPriority(updatedTask.getPriority());
         taskToUpdate.setStatus(updatedTask.getStatus());

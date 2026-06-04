@@ -93,7 +93,7 @@ public class TaskController {
 
     @PutMapping("/my/{id}")
     public TaskResponseDTO updateOwnTask(@Valid @RequestBody Task updatedTask, @PathVariable Long id) {
-        return taskMapper.toDTO(taskService.updateOwnTask(updatedTask, id));
+        return taskMapper.toDTO(taskService.updateOwnTask(id, updatedTask));
     }
 
     @PatchMapping("/my/{id}/status")

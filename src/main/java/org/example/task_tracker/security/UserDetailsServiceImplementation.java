@@ -1,4 +1,5 @@
 package org.example.task_tracker.security;
+
 import org.example.task_tracker.repository.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

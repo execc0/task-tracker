@@ -34,11 +34,12 @@ public class Task {
 
     private String description;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 
-    public Task() {}
+    public Task() {
+    }
 
     @PrePersist
     protected void onCreate() {

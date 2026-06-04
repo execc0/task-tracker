@@ -29,7 +29,7 @@ public class TaskMapper {
         return taskResponseDTO;
     }
 
-    public List<TaskResponseDTO> toDTOList(List<Task> taskList){
+    public List<TaskResponseDTO> toDTOList(List<Task> taskList) {
         return taskList.stream()
                 .map(task -> toDTO(task))
                 .toList();

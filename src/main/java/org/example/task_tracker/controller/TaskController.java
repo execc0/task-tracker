@@ -50,7 +50,7 @@ public class TaskController {
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public TaskResponseDTO updateTask(@PathVariable Long id, @Valid @RequestBody Task updatedTask) {
-        return taskMapper.toDTO(taskService.updateTask(id , updatedTask));
+        return taskMapper.toDTO(taskService.updateTask(id, updatedTask));
     }
 
     @DeleteMapping("/{id}")

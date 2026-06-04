@@ -31,11 +31,11 @@ public class User implements UserDetails {
     @Email(message = "Неверный формат email")
     private String email;
 
-    @Column(unique = true, nullable=false)
+    @Column(unique = true, nullable = false)
     @NotBlank(message = "Username не может быть пустым")
     private String username;
 
-    @Column(nullable=false)
+    @Column(nullable = false)
     @NotBlank(message = "Password не может быть пустым")
     private String password;
 

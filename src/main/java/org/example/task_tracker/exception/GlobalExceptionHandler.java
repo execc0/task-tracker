@@ -1,4 +1,5 @@
 package org.example.task_tracker.exception;
+
 import jakarta.validation.ConstraintViolationException;
 import org.hibernate.type.descriptor.java.ObjectJavaType;
 import org.springframework.http.HttpStatus;
@@ -20,7 +21,7 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<Object> handleNotFound (ResourceNotFoundException e) {
+    public ResponseEntity<Object> handleNotFound(ResourceNotFoundException e) {
         Map<String, Object> map = new HashMap<>();
         map.put("status", 404);
         map.put("message", e.getMessage());
@@ -36,7 +37,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Object> handleExceptions (Exception e) {
+    public ResponseEntity<Object> handleExceptions(Exception e) {
         Map<String, Object> map = new HashMap<>();
         map.put("status", 500);
         map.put("message", "Внутренняя ошибка сервера / Internal server error");

@@ -1,35 +1,35 @@
 package org.example.task_tracker.service;
 
+import jakarta.validation.Valid;
 import org.example.task_tracker.exception.ResourceNotFoundException;
 import org.example.task_tracker.kafka.TaskStatusProducer;
 import org.example.task_tracker.model.Role;
 import org.example.task_tracker.model.Status;
 import org.example.task_tracker.model.Task;
 import org.example.task_tracker.model.User;
-import org.example.task_tracker.repository.UserRepository;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Service;
 import org.example.task_tracker.repository.TaskRepository;
-import org.springframework.security.access.AccessDeniedException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
 
 @Service
+@Transactional(readOnly = true)
 public class TaskService {
     private final TaskStatusProducer producer;
     private final TaskRepository taskRepository;
     private final UserService userService;
-    private final UserRepository userRepository;
 
-    public TaskService(TaskStatusProducer producer, TaskRepository taskRepository, UserService userService, UserRepository userRepository) {
+    public TaskService(TaskStatusProducer producer, TaskRepository taskRepository, UserService userService) {
         this.producer = producer;
         this.taskRepository = taskRepository;
         this.userService = userService;
-        this.userRepository = userRepository;
     }
 
 
     // Методы, которые вызываются только с ролью ADMIN
-    public Task createTask(Task task) {
+    @Transactional
+    public Task createTask(@Valid Task task) {
         return taskRepository.save(task);
     }
 
@@ -42,11 +42,13 @@ public class TaskService {
         return taskRepository.findAll();
     }
 
+    @Transactional
     public void deleteTask(Long id) {
         taskRepository.deleteById(id);
     }
 
-    public Task updateTask(Long id, Task updatedTask) {
+    @Transactional
+    public Task updateTask(Long id, @Valid Task updatedTask) {
         Task taskToUpdate = taskRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Задача не найдена - указан неверный id"));
         Task resultTask = updateTaskFields(taskToUpdate, updatedTask);
@@ -54,6 +56,7 @@ public class TaskService {
         return taskRepository.save(resultTask);
     }
 
+    @Transactional
     public Task updateTaskStatus(Long id, Status status) {
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Задача не найдена - указан неверный id"));
@@ -71,7 +74,7 @@ public class TaskService {
         return taskRepository.findTasksByUserIsNull();
     }
 
-    public List <Task> getOwnTasks() {
+    public List<Task> getOwnTasks() {
         User user = userService.getCurrentUser();
         return taskRepository.findTasksByUserId(user.getId());
     }
@@ -85,7 +88,8 @@ public class TaskService {
                 .orElseThrow(() -> new ResourceNotFoundException(String.format("Задача с id %d не найдена", id)));
     }
 
-    public Task createOwnTask(Task task) {
+    @Transactional
+    public Task createOwnTask(@Valid Task task) {
         User user = userService.getCurrentUser();
         Long taskCount = taskRepository.countTasksByUserIdAndStatusIn(user.getId(), List.of(Status.TODO, Status.IN_PROGRESS));
         if (taskCount >= 20 && user.getRole() == Role.USER) {
@@ -95,7 +99,8 @@ public class TaskService {
         return taskRepository.save(task);
     }
 
-    public Task updateOwnTask(Long id, Task updatedTask) {
+    @Transactional
+    public Task updateOwnTask(Long id, @Valid Task updatedTask) {
         Task taskToUpdate = taskRepository.findTaskById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Задача не найдена - указан неверный id"));
         User user = userService.getCurrentUser();
@@ -106,6 +111,7 @@ public class TaskService {
         return taskRepository.save(resultTask);
     }
 
+    @Transactional
     public Task updateOwnTaskStatus(Long id, Status status) {
         Task task = taskRepository.findTaskById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Задача не найдена - указан неверный id"));
@@ -116,7 +122,7 @@ public class TaskService {
             throw new IllegalStateException("Нельзя изменить статус задачи с IN PROGRESS на TODO");
         }
         User user = userService.getCurrentUser();
-        if(task.getUser().getId() != user.getId()) {
+        if (task.getUser().getId() != user.getId()) {
             throw new IllegalStateException("Задача с данным id вам не принадлежит");
         }
         task.setStatus(status);
@@ -124,6 +130,7 @@ public class TaskService {
         return taskRepository.save(task);
     }
 
+    @Transactional
     public Task takeAvailableTask(Long id) {
         Task task = taskRepository.findTaskById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Задача не найдена - указан неверный id"));

@@ -9,9 +9,12 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface TaskRepository extends JpaRepository<Task, Long>{
+public interface TaskRepository extends JpaRepository<Task, Long> {
     List<Task> findTasksByUserId(long userId);
+
     Optional<Task> findTaskById(Long id);
+
     Long countTasksByUserIdAndStatusIn(long id, List<Status> statusList);
+
     List<Task> findTasksByUserIsNull();
 }

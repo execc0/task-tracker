@@ -1,5 +1,8 @@
 package org.example.task_tracker.service;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import org.example.task_tracker.exception.ResourceNotFoundException;
 import org.example.task_tracker.exception.UserAlreadyExistsException;
 import org.example.task_tracker.model.Role;
@@ -8,14 +11,15 @@ import org.example.task_tracker.repository.UserRepository;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
-import java.util.Scanner;
 
 @Service
+@Transactional(readOnly = true)
+@Validated
 public class UserService {
-
-
 
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
@@ -35,13 +39,15 @@ public class UserService {
         return userRepository.findAll();
     }
 
-    public User updateUserEmail(String email, Long id) {
+    @Transactional
+    public User updateUserEmail(@NotBlank @Email String email, Long id) {
         User user = getUserById(id);
         user.setEmail(email);
         return userRepository.save(user);
     }
 
-    public User updateUser(User user, Long id) {
+    @Transactional
+    public User updateUser(@Valid User user, Long id) {
         User userToUpdate = getUserById(id);
         userToUpdate.setEmail(user.getEmail());
         userToUpdate.setName(user.getName());
@@ -49,12 +55,14 @@ public class UserService {
 
     }
 
-    public User updateUserName(String name, Long id) {
+    @Transactional
+    public User updateUserName(@NotBlank String name, Long id) {
         User user = getUserById(id);
         user.setName(name);
         return userRepository.save(user);
     }
 
+    @Transactional
     public User updateUserRole(Role role, Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Пользователь с данным id не найден"));
@@ -62,33 +70,43 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    @Transactional
     public void deleteUserById(Long id) {
         userRepository.deleteById(id);
     }
 
     // Всё что ниже - методы, которые вызываются с ролью USER (или ADMIN)
-    public User updateOwnEmail(String email) {
-        if (userRepository.findUserByEmail(email).isPresent()) { throw new UserAlreadyExistsException("Данный email уже занят"); }
+    @Transactional
+    public User updateOwnEmail(@NotBlank String email) {
+        if (userRepository.findUserByEmail(email).isPresent()) {
+            throw new UserAlreadyExistsException("Данный email уже занят");
+        }
         User user = getCurrentUser();
         user.setEmail(email);
         return userRepository.save(user);
     }
 
-    public User updateOwnUsername(String username) {
-        if (userRepository.findUserByUsername(username).isPresent()) { throw new UserAlreadyExistsException("Данный username уже занят"); }
+    @Transactional
+    public User updateOwnUsername(@NotBlank String username) {
+        if (userRepository.findUserByUsername(username).isPresent()) {
+            throw new UserAlreadyExistsException("Данный username уже занят");
+        }
         User user = getCurrentUser();
         user.setUsername(username);
         return userRepository.save(user);
     }
 
-    public User updateOwnName(String name) {
+    @Transactional
+    public User updateOwnName(@NotBlank String name) {
         User user = getCurrentUser();
         user.setName(name);
         return userRepository.save(user);
     }
 
-    public User updateOwnPassword(String password) {
-        if(password == null || password.length() < 8) throw new IllegalArgumentException("Пароль должен быть не менее 8 символов");
+    @Transactional
+    public User updateOwnPassword(@NotBlank String password) {
+        if (password == null || password.length() < 8)
+            throw new IllegalArgumentException("Пароль должен быть не менее 8 символов");
         User user = getCurrentUser();
         user.setPassword(passwordEncoder.encode(password));
         return userRepository.save(user);

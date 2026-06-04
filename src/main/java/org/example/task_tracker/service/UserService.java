@@ -1,6 +1,5 @@
 package org.example.task_tracker.service;
 
-import io.jsonwebtoken.security.Password;
 import org.example.task_tracker.exception.ResourceNotFoundException;
 import org.example.task_tracker.exception.UserAlreadyExistsException;
 import org.example.task_tracker.model.Role;
@@ -11,9 +10,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Scanner;
 
 @Service
 public class UserService {
+
+
 
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
@@ -86,7 +88,7 @@ public class UserService {
     }
 
     public User updateOwnPassword(String password) {
-        if(password.length() < 8) throw new IllegalArgumentException("Пароль должен быть не менее 8 символов");
+        if(password == null || password.length() < 8) throw new IllegalArgumentException("Пароль должен быть не менее 8 символов");
         User user = getCurrentUser();
         user.setPassword(passwordEncoder.encode(password));
         return userRepository.save(user);

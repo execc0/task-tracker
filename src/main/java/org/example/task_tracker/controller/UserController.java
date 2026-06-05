@@ -1,10 +1,12 @@
 package org.example.task_tracker.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import org.example.task_tracker.DTO.response.UserResponseDTO;
 import org.example.task_tracker.model.Role;
 import org.example.task_tracker.service.UserService;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +16,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/users")
 @Validated
+@Tag(name = "2. Users", description = "Управление пользователями")
 public class UserController {
 
     private final UserService userService;
@@ -36,6 +39,7 @@ public class UserController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void removeUserById(@PathVariable Long id) {
         userService.deleteUserById(id);
     }

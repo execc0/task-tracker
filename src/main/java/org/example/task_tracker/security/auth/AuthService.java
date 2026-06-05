@@ -1,6 +1,7 @@
 package org.example.task_tracker.security.auth;
 
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.example.task_tracker.exception.UserAlreadyExistsException;
 import org.example.task_tracker.model.User;
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 @Slf4j
+@Tag(name = "0. Auth", description = "Аутентификация")
 public class AuthService {
 
     private final UserRepository userRepository;

@@ -1,10 +1,12 @@
 package org.example.task_tracker.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.example.task_tracker.DTO.response.TaskResponseDTO;
 import org.example.task_tracker.model.Status;
 import org.example.task_tracker.model.Task;
 import org.example.task_tracker.service.TaskService;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,6 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/tasks")
+@Tag(name = "1. Tasks", description = "Управление задачами")
 public class TaskController {
 
     private final TaskService taskService;
@@ -40,6 +43,7 @@ public class TaskController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
+    @ResponseStatus(HttpStatus.CREATED)
     public TaskResponseDTO createTask(@Valid @RequestBody Task task) {
         return taskService.createTask(task);
     }
@@ -52,6 +56,7 @@ public class TaskController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteTask(@PathVariable Long id) {
         taskService.deleteTask(id);
     }
@@ -84,6 +89,7 @@ public class TaskController {
     }
 
     @PostMapping("/my")
+    @ResponseStatus(HttpStatus.CREATED)
     public TaskResponseDTO createOwnTask(@Valid @RequestBody Task task) {
         return taskService.createOwnTask(task);
     }
@@ -99,6 +105,7 @@ public class TaskController {
     }
 
     @DeleteMapping("/my/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteOwnTask(@PathVariable Long id) {
         taskService.deleteOwnTask(id);
     }

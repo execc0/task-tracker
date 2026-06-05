@@ -228,8 +228,8 @@ class TaskServiceTest {
         @MethodSource("provideValidStatuses")
         public void shouldThrowExceptionWhenUpdatingNotOwnTaskStatus(Status oldStatus, Status newStatus) {
             User anotherUser = new User();
-            user.setName("Другой юзер");
-            user.setId(2L);
+            anotherUser.setName("Другой юзер");
+            anotherUser.setId(2L);
 
             task.setStatus(oldStatus);
             task.setUser(anotherUser);

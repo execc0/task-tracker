@@ -1,6 +1,7 @@
 package org.example.task_tracker.service;
 
 
+import org.example.task_tracker.DTO.mapper.UserMapper;
 import org.example.task_tracker.exception.UserAlreadyExistsException;
 import org.example.task_tracker.model.User;
 import org.example.task_tracker.repository.UserRepository;
@@ -35,6 +36,9 @@ public class UserServiceTest {
     @Spy
     @InjectMocks
     private UserService userService;
+
+    @Spy
+    private UserMapper userMapper = new UserMapper();
 
     private User user;
 

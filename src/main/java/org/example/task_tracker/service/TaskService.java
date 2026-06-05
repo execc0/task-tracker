@@ -2,6 +2,8 @@ package org.example.task_tracker.service;
 
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.example.task_tracker.DTO.mapper.TaskMapper;
+import org.example.task_tracker.DTO.response.TaskResponseDTO;
 import org.example.task_tracker.exception.ResourceNotFoundException;
 import org.example.task_tracker.kafka.TaskStatusProducer;
 import org.example.task_tracker.model.Role;
@@ -20,11 +22,14 @@ import java.util.List;
 @Validated
 @Slf4j
 public class TaskService {
+
+    private final TaskMapper taskMapper;
     private final TaskStatusProducer producer;
     private final TaskRepository taskRepository;
     private final UserService userService;
 
-    public TaskService(TaskStatusProducer producer, TaskRepository taskRepository, UserService userService) {
+    public TaskService(TaskMapper taskMapper, TaskStatusProducer producer, TaskRepository taskRepository, UserService userService) {
+        this.taskMapper = taskMapper;
         this.producer = producer;
         this.taskRepository = taskRepository;
         this.userService = userService;
@@ -33,20 +38,22 @@ public class TaskService {
 
     // Методы, которые вызываются только с ролью ADMIN
     @Transactional
-    public Task createTask(@Valid Task task) {
+    public TaskResponseDTO createTask(@Valid Task task) {
         User user = userService.getCurrentUser();
         Task saved = taskRepository.save(task);
         log.info("Created task title = {}, taskId = {} by admin userId = {}", saved.getTitle(), saved.getId(), user.getId());
-        return saved;
+        return taskMapper.toDTO(saved);
     }
 
-    public Task getTaskById(Long id) {
-        return taskRepository.findById(id)
+    public TaskResponseDTO getTaskById(Long id) {
+        Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Задача не найдена - указан неверный id"));
+        return taskMapper.toDTO(task);
     }
 
-    public List<Task> getAllTasks() {
-        return taskRepository.findAll();
+    public List<TaskResponseDTO> getAllTasks() {
+        List<Task> taskList = taskRepository.findAll();
+        return taskMapper.toDTOList(taskList);
     }
 
     @Transactional
@@ -57,7 +64,7 @@ public class TaskService {
     }
 
     @Transactional
-    public Task updateTask(Long id, @Valid Task updatedTask) {
+    public TaskResponseDTO updateTask(Long id, @Valid Task updatedTask) {
         Task taskToUpdate = taskRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Задача не найдена - указан неверный id"));
         User user = userService.getCurrentUser();
@@ -65,11 +72,11 @@ public class TaskService {
         resultTask.setUser(updatedTask.getUser());
         Task saved = taskRepository.save(resultTask);
         log.info("Updated task title = {}, taskId = {}, by admin userId = {}", saved.getTitle(), saved.getId(), user.getId());
-        return saved;
+        return taskMapper.toDTO(saved);
     }
 
     @Transactional
-    public Task updateTaskStatus(Long id, Status status) {
+    public TaskResponseDTO updateTaskStatus(Long id, Status status) {
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Задача не найдена - указан неверный id"));
         User user = userService.getCurrentUser();
@@ -77,36 +84,36 @@ public class TaskService {
         Task saved = taskRepository.save(task);
         log.info("Updated task status title = {}, taskId = {}, new status = {} by admin userId = {}",
                 saved.getTitle(), saved.getId(), saved.getStatus(), user.getId());
-        return saved;
+        return taskMapper.toDTO(saved);
     }
 
-    public List<Task> findTasksByUserId(Long id) {
-        return taskRepository.findTasksByUserId(id);
+    public List<TaskResponseDTO> findTasksByUserId(Long id) {
+        return taskMapper.toDTOList(taskRepository.findTasksByUserId(id));
     }
 
 
     // Всё что ниже - методы, которые вызываются с ролью USER (или ADMIN)
-    public List<Task> getAvailableTasks() {
-        return taskRepository.findTasksByUserIsNull();
+    public List<TaskResponseDTO> getAvailableTasks() {
+        return taskMapper.toDTOList(taskRepository.findTasksByUserIsNull());
     }
 
-    public List<Task> getOwnTasks() {
+    public List<TaskResponseDTO> getOwnTasks() {
         User user = userService.getCurrentUser();
-        return taskRepository.findTasksByUserId(user.getId());
+        return taskMapper.toDTOList(taskRepository.findTasksByUserId(user.getId()));
     }
 
-    public Task getOwnTask(Long id) {
+    public TaskResponseDTO getOwnTask(Long id) {
         User user = userService.getCurrentUser();
         Task task = taskRepository.findTaskById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(String.format("Задача с id %d не найдена", id)));
         if (task.getUser().getId() != user.getId()) {
             throw new IllegalStateException("Задача с данным id вам не принадлежит");
         }
-        return task;
+        return taskMapper.toDTO(task);
     }
 
     @Transactional
-    public Task createOwnTask(@Valid Task task) {
+    public TaskResponseDTO createOwnTask(@Valid Task task) {
         User user = userService.getCurrentUser();
         Long taskCount = taskRepository.countTasksByUserIdAndStatusIn(user.getId(), List.of(Status.TODO, Status.IN_PROGRESS));
         if (taskCount >= 20 && user.getRole() == Role.USER) {
@@ -116,12 +123,12 @@ public class TaskService {
         task.setUser(user);
         Task saved = taskRepository.save(task);
         log.info("Created new task taskId = {}, title = {} for user userId = {}", saved.getId(), saved.getTitle(), saved.getId());
-        return saved;
+        return taskMapper.toDTO(saved);
 
     }
 
     @Transactional
-    public Task updateOwnTask(Long id, @Valid Task updatedTask) {
+    public TaskResponseDTO updateOwnTask(Long id, @Valid Task updatedTask) {
         Task taskToUpdate = taskRepository.findTaskById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Задача не найдена - указан неверный id"));
         User user = userService.getCurrentUser();
@@ -131,11 +138,11 @@ public class TaskService {
         Task resultTask = updateTaskFields(taskToUpdate, updatedTask);
         Task saved = taskRepository.save(resultTask);
         log.info("Task taskId = {} updated by user userId = {}", saved.getId(), user.getId());
-        return saved;
+        return taskMapper.toDTO(saved);
     }
 
     @Transactional
-    public Task updateOwnTaskStatus(Long id, Status status) {
+    public TaskResponseDTO updateOwnTaskStatus(Long id, Status status) {
         Task task = taskRepository.findTaskById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Задача не найдена - указан неверный id"));
         if (task.getStatus() == Status.DONE) {
@@ -149,17 +156,17 @@ public class TaskService {
         User user = userService.getCurrentUser();
         if (task.getUser().getId() != user.getId()) {
             log.warn("Attempt to change someone else's task taskId = {} by user userId = {}", task.getId(), user.getId());
-            throw new IllegalStateException("Задача с данным id вам не принадлежит");
+            throw new ResourceNotFoundException("Задача не найдена - указан неверный id");
         }
         task.setStatus(status);
-        producer.sendStatusChange(id, task.getUser().getId(), status.name());
         Task saved = taskRepository.save(task);
+        producer.sendStatusChange(id, task.getUser().getId(), status.name());
         log.info("Task taskId = {} changed status to {} by userId = {}", saved.getId(), saved.getStatus(), user.getId());
-        return saved;
+        return taskMapper.toDTO(saved);
     }
 
     @Transactional
-    public Task takeAvailableTask(Long id) {
+    public TaskResponseDTO takeAvailableTask(Long id) {
         Task task = taskRepository.findTaskById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Задача не найдена - указан неверный id"));
         if (task.getUser() != null) {
@@ -170,7 +177,7 @@ public class TaskService {
         task.setUser(user);
         Task saved = taskRepository.save(task);
         log.info("User with id = {} took task with title = {}, taskId = {}", user.getId(), saved.getTitle(), saved.getId());
-        return saved;
+        return taskMapper.toDTO(saved);
     }
 
     @Transactional

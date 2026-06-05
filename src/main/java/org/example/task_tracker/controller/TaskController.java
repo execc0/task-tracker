@@ -1,7 +1,6 @@
 package org.example.task_tracker.controller;
 
 import jakarta.validation.Valid;
-import org.example.task_tracker.DTO.mapper.TaskMapper;
 import org.example.task_tracker.DTO.response.TaskResponseDTO;
 import org.example.task_tracker.model.Status;
 import org.example.task_tracker.model.Task;
@@ -16,41 +15,39 @@ import java.util.List;
 public class TaskController {
 
     private final TaskService taskService;
-    private final TaskMapper taskMapper;
 
-    public TaskController(TaskService taskService, TaskMapper taskMapper) {
+    public TaskController(TaskService taskService) {
         this.taskService = taskService;
-        this.taskMapper = taskMapper;
     }
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public List<TaskResponseDTO> getAllTasks() {
-        return taskMapper.toDTOList(taskService.getAllTasks());
+        return taskService.getAllTasks();
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public TaskResponseDTO getTaskById(@PathVariable Long id) {
-        return taskMapper.toDTO(taskService.getTaskById(id));
+        return taskService.getTaskById(id);
     }
 
     @GetMapping("/user/{userId}")
     @PreAuthorize("hasRole('ADMIN')")
     public List<TaskResponseDTO> getTasksByUserId(@PathVariable Long userId) {
-        return taskMapper.toDTOList(taskService.findTasksByUserId(userId));
+        return taskService.findTasksByUserId(userId);
     }
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public TaskResponseDTO createTask(@Valid @RequestBody Task task) {
-        return taskMapper.toDTO(taskService.createTask(task));
+        return taskService.createTask(task);
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public TaskResponseDTO updateTask(@PathVariable Long id, @Valid @RequestBody Task updatedTask) {
-        return taskMapper.toDTO(taskService.updateTask(id, updatedTask));
+        return taskService.updateTask(id, updatedTask);
     }
 
     @DeleteMapping("/{id}")
@@ -62,43 +59,43 @@ public class TaskController {
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasRole('ADMIN')")
     public TaskResponseDTO updateTaskStatus(@PathVariable Long id, @RequestParam Status status) {
-        return taskMapper.toDTO(taskService.updateTaskStatus(id, status));
+        return taskService.updateTaskStatus(id, status);
     }
 
     // Всё что ниже - эндпоинты для USER (для ADMIN тоже доступны).
     @GetMapping("/available")
     public List<TaskResponseDTO> getAvailableTasks() {
-        return taskMapper.toDTOList(taskService.getAvailableTasks());
+        return taskService.getAvailableTasks();
     }
 
     @PostMapping("/available/{id}")
     public TaskResponseDTO takeAvailableTask(@PathVariable Long id) {
-        return taskMapper.toDTO(taskService.takeAvailableTask(id));
+        return taskService.takeAvailableTask(id);
     }
 
     @GetMapping("/my")
     public List<TaskResponseDTO> getOwnTasks() {
-        return taskMapper.toDTOList(taskService.getOwnTasks());
+        return taskService.getOwnTasks();
     }
 
     @GetMapping("/my/{id}")
     public TaskResponseDTO getOwnTask(@PathVariable Long id) {
-        return taskMapper.toDTO(taskService.getOwnTask(id));
+        return taskService.getOwnTask(id);
     }
 
     @PostMapping("/my")
     public TaskResponseDTO createOwnTask(@Valid @RequestBody Task task) {
-        return taskMapper.toDTO(taskService.createOwnTask(task));
+        return taskService.createOwnTask(task);
     }
 
     @PutMapping("/my/{id}")
     public TaskResponseDTO updateOwnTask(@Valid @RequestBody Task updatedTask, @PathVariable Long id) {
-        return taskMapper.toDTO(taskService.updateOwnTask(id, updatedTask));
+        return taskService.updateOwnTask(id, updatedTask);
     }
 
     @PatchMapping("/my/{id}/status")
     public TaskResponseDTO updateOwnTaskStatus(@PathVariable Long id, @RequestParam Status status) {
-        return taskMapper.toDTO(taskService.updateOwnTaskStatus(id, status));
+        return taskService.updateOwnTaskStatus(id, status);
     }
 
     @DeleteMapping("/my/{id}")

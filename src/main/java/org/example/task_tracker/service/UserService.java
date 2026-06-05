@@ -3,6 +3,8 @@ package org.example.task_tracker.service;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.extern.slf4j.Slf4j;
+import org.example.task_tracker.DTO.mapper.UserMapper;
+import org.example.task_tracker.DTO.response.UserResponseDTO;
 import org.example.task_tracker.exception.ResourceNotFoundException;
 import org.example.task_tracker.exception.UserAlreadyExistsException;
 import org.example.task_tracker.model.Role;
@@ -22,59 +24,62 @@ import java.util.List;
 @Slf4j
 public class UserService {
 
+    private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
 
-    public UserService(PasswordEncoder passwordEncoder, UserRepository userRepository) {
+    public UserService(UserMapper userMapper, PasswordEncoder passwordEncoder, UserRepository userRepository) {
+        this.userMapper = userMapper;
         this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
     }
 
     // Методы, которые вызываются только с ролью ADMIN
-    public User getUserById(Long id) {
-        return userRepository.findById(id)
+    public UserResponseDTO getUserById(Long id) {
+        User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Неверно указан id пользователя"));
+        return userMapper.toDTO(user);
     }
 
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    public List<UserResponseDTO> getAllUsers() {
+        return userMapper.toDTOList(userRepository.findAll());
     }
 
     @Transactional
-    public User updateUserEmail(@NotBlank @Email String email, Long id) {
+    public UserResponseDTO updateUserEmail(@NotBlank @Email String email, Long id) {
         User currentUser = getCurrentUser();
         if (userRepository.findUserByEmail(email).isPresent()) {
             log.warn("Attempt to change email by admin to email = {} already taken", email);
             throw new UserAlreadyExistsException("Данный email уже занят");
         }
-        User user = getUserById(id);
+        User user = getUserByIdInternal(id);
         String oldEmail = user.getEmail();
         user.setEmail(email);
         User saved = userRepository.save(user);
         log.info("User userId = {} updated email by admin userId = {}",
                 saved.getId(), currentUser.getId());
-        return saved;
+        return userMapper.toDTO(saved);
     }
 
     @Transactional
-    public User updateUserName(@NotBlank String name, Long id) {
+    public UserResponseDTO updateUserName(@NotBlank String name, Long id) {
         User currentUser = getCurrentUser();
-        User user = getUserById(id);
+        User user = getUserByIdInternal(id);
         user.setName(name);
         User saved = userRepository.save(user);
         log.info("Updated name for user userId = {} by admin userId = {}, new name = {}", saved.getId(), currentUser.getId(), name);
-        return saved;
+        return userMapper.toDTO(saved);
     }
 
     @Transactional
-    public User updateUserRole(Role role, Long id) {
+    public UserResponseDTO updateUserRole(Role role, Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Пользователь с данным id не найден"));
         User currentUser = getCurrentUser();
         user.setRole(role);
         User saved = userRepository.save(user);
         log.info("Updated role for user userId = {} by admin userId = {}, new role = {}", saved.getId(), currentUser.getId(), role);
-        return saved;
+        return userMapper.toDTO(saved);
     }
 
     @Transactional
@@ -86,7 +91,7 @@ public class UserService {
 
     // Всё что ниже - методы, которые вызываются с ролью USER (или ADMIN)
     @Transactional
-    public User updateOwnEmail(@NotBlank String email) {
+    public UserResponseDTO updateOwnEmail(@NotBlank String email) {
         if (isEmailTaken(email)) {
             log.warn("Attempt to take email = {} already taken", email);
             throw new UserAlreadyExistsException("Данный email уже занят");
@@ -96,11 +101,11 @@ public class UserService {
         user.setEmail(email);
         User saved = userRepository.save(user);
         log.info("User userId = {} updated OWN email", saved.getId());
-        return saved;
+        return userMapper.toDTO(saved);
     }
 
     @Transactional
-    public User updateOwnUsername(@NotBlank String username) {
+    public UserResponseDTO updateOwnUsername(@NotBlank String username) {
         if (isUsernameTaken(username)) {
             log.warn("Attempt to take username = {} already taken", username);
             throw new UserAlreadyExistsException("Данный username уже занят");
@@ -110,28 +115,28 @@ public class UserService {
         user.setUsername(username);
         User saved = userRepository.save(user);
         log.info("User userId = {} updated OWN username, old username = {} new username = {}", saved.getId(), oldUsername, user.getUsername());
-        return saved;
+        return userMapper.toDTO(saved);
     }
 
     @Transactional
-    public User updateOwnName(@NotBlank String name) {
+    public UserResponseDTO updateOwnName(@NotBlank String name) {
         User user = getCurrentUser();
         String oldName = user.getName();
         user.setName(name);
         User saved = userRepository.save(user);
         log.info("User userId = {} updated OWN name, old name = {} new name = {}", saved.getId(), oldName, user.getName());
-        return saved;
+        return userMapper.toDTO(saved);
     }
 
     @Transactional
-    public User updateOwnPassword(@NotBlank String password) {
+    public UserResponseDTO updateOwnPassword(@NotBlank String password) {
         if (password == null || password.length() < 8)
             throw new IllegalArgumentException("Пароль должен быть не менее 8 символов");
         User user = getCurrentUser();
         user.setPassword(passwordEncoder.encode(password));
         User saved = userRepository.save(user);
         log.info("User userId = {} updated OWN password", user.getId());
-        return saved;
+        return userMapper.toDTO(saved);
     }
 
     protected User getCurrentUser() {
@@ -139,6 +144,11 @@ public class UserService {
                 .getAuthentication()
                 .getPrincipal();
         return user;
+    }
+
+    protected User getUserByIdInternal(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Неверно указан id пользователя"));
     }
 
     protected boolean isEmailTaken(String email) {

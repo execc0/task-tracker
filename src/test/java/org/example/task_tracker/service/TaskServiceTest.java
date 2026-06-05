@@ -1,5 +1,8 @@
 package org.example.task_tracker.service;
 
+import org.example.task_tracker.DTO.mapper.TaskMapper;
+import org.example.task_tracker.DTO.mapper.UserMapper;
+import org.example.task_tracker.DTO.response.TaskResponseDTO;
 import org.example.task_tracker.exception.ResourceNotFoundException;
 import org.example.task_tracker.kafka.TaskStatusProducer;
 import org.example.task_tracker.model.*;
@@ -14,12 +17,14 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,6 +39,12 @@ class TaskServiceTest {
     @Mock
     private TaskStatusProducer producer;
 
+    @Spy
+    private UserMapper userMapper = new UserMapper();
+
+    @Spy
+    private TaskMapper taskMapper = new TaskMapper(userMapper);
+
     @InjectMocks
     private TaskService taskService;
 
@@ -47,6 +58,7 @@ class TaskServiceTest {
         void setUp() {
 
             currentUser = new User();
+            currentUser.setUsername("TestUser");
             currentUser.setId(1L);
             currentUser.setRole(Role.USER);
 
@@ -64,10 +76,11 @@ class TaskServiceTest {
             when(taskRepository.countTasksByUserIdAndStatusIn(anyLong(), anyList())).thenReturn(taskCount);
             when(taskRepository.save(task)).thenReturn(task);
 
-            Task result = taskService.createOwnTask(task);
+            TaskResponseDTO result = taskService.createOwnTask(task);
 
             assertEquals("Тестовая задача", result.getTitle());
-            assertEquals(currentUser, result.getUser());
+            assertEquals(currentUser.getUsername(), result.getUser().getUsername());
+            assertEquals(currentUser.getId(), result.getUser().getId());
         }
 
         @ParameterizedTest
@@ -104,7 +117,10 @@ class TaskServiceTest {
             when(userService.getCurrentUser()).thenReturn(user);
             when(taskRepository.save(task)).thenReturn(task);
 
-            assertEquals(task, taskService.takeAvailableTask(1L));
+            TaskResponseDTO result = taskService.takeAvailableTask(1L);
+
+            assertEquals(task.getTitle(), result.getTitle());
+            assertEquals(task.getPriority(), result.getPriority());
         }
 
         @Test
@@ -181,7 +197,7 @@ class TaskServiceTest {
             when(userService.getCurrentUser()).thenReturn(user);
             when(taskRepository.save(task)).thenReturn(task);
 
-            Task updatedTask = taskService.updateOwnTaskStatus(1L, newStatus);
+            TaskResponseDTO updatedTask = taskService.updateOwnTaskStatus(1L, newStatus);
 
             assertEquals(newStatus, updatedTask.getStatus());
         }
@@ -221,7 +237,7 @@ class TaskServiceTest {
             when(taskRepository.findTaskById(anyLong())).thenReturn(Optional.of(task));
             when(userService.getCurrentUser()).thenReturn(user);
 
-            assertThrows(IllegalStateException.class, () -> taskService.updateOwnTaskStatus(1L, newStatus));
+            assertThrows(ResourceNotFoundException.class, () -> taskService.updateOwnTaskStatus(1L, newStatus));
 
         }
 
@@ -263,7 +279,7 @@ class TaskServiceTest {
             when(taskRepository.findTaskById(anyLong())).thenReturn(Optional.of(task));
             when(taskRepository.save(task)).thenReturn(task);
 
-            Task resultTask = taskService.updateOwnTask(1L, updatedTask);
+            TaskResponseDTO resultTask = taskService.updateOwnTask(1L, updatedTask);
 
             assertEquals(updatedTask.getTitle(), resultTask.getTitle());
             assertEquals(updatedTask.getStatus(), resultTask.getStatus());

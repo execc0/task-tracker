@@ -1,6 +1,7 @@
 package org.example.task_tracker.security.auth;
 
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.task_tracker.exception.UserAlreadyExistsException;
 import org.example.task_tracker.model.User;
 import org.example.task_tracker.repository.UserRepository;
@@ -13,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional(readOnly = true)
+@Slf4j
 public class AuthService {
 
     private final UserRepository userRepository;
@@ -41,11 +43,15 @@ public class AuthService {
         user.setName(request.getName());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setUsername(request.getUsername());
-        return userRepository.save(user);
+        User saved = userRepository.save(user);
+        log.info("New user registered, username = {}, name = {}",
+                saved.getUsername(), saved.getName());
+        return saved;
     }
 
     public void login(LoginRequest request) {
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
+        log.info("User logged in username = {}", request.getUsername());
     }
 
     public User findByUsername(String username) {

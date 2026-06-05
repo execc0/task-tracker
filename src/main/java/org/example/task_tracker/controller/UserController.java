@@ -1,12 +1,10 @@
 package org.example.task_tracker.controller;
 
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import org.example.task_tracker.DTO.mapper.UserMapper;
 import org.example.task_tracker.DTO.response.UserResponseDTO;
 import org.example.task_tracker.model.Role;
-import org.example.task_tracker.model.User;
 import org.example.task_tracker.service.UserService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -43,12 +41,6 @@ public class UserController {
     @PreAuthorize("hasRole('ADMIN')")
     public void removeUserById(@PathVariable Long id) {
         userService.deleteUserById(id);
-    }
-
-    @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public UserResponseDTO updateUser(@Valid @RequestBody User user, @PathVariable Long id) {
-        return userMapper.toDTO(userService.updateUser(user, id));
     }
 
     @PatchMapping("/{id}/name")

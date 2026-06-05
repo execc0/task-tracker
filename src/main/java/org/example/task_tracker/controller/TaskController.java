@@ -101,4 +101,9 @@ public class TaskController {
         return taskMapper.toDTO(taskService.updateOwnTaskStatus(id, status));
     }
 
+    @DeleteMapping("/my/{id}")
+    public void deleteOwnTask(@PathVariable Long id) {
+        taskService.deleteOwnTask(id);
+    }
+
 }

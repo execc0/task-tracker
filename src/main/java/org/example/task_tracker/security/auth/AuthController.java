@@ -30,11 +30,12 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<Object> login(@Valid @RequestBody LoginRequest request) {
-        HashMap<String, String> response = new HashMap<>();
+        HashMap<String, Object> response = new HashMap<>();
         User user = authService.findByUsername(request.getUsername());
         authService.login(request);
         String token = jwtService.generateToken(user);
         response.put("token", token);
+        response.put("id", user.getId());
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

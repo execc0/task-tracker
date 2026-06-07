@@ -59,7 +59,7 @@ public class TaskService {
     }
 
     public List<TaskResponseDTO> getAllTasks() {
-        List<Task> taskList = taskRepository.findAll();
+        List<Task> taskList = taskRepository.findAllWithUsers();
         return taskMapper.toDTOList(taskList);
     }
 
@@ -95,7 +95,7 @@ public class TaskService {
     }
 
     public List<TaskResponseDTO> findTasksByUserId(Long id) {
-        return taskMapper.toDTOList(taskRepository.findTasksByUserId(id));
+        return taskMapper.toDTOList(taskRepository.findTasksByUserIdWithUser(id));
     }
 
 
@@ -106,7 +106,7 @@ public class TaskService {
 
     public List<TaskResponseDTO> getOwnTasks() {
         User user = userService.getCurrentUser();
-        return taskMapper.toDTOList(taskRepository.findTasksByUserId(user.getId()));
+        return taskMapper.toDTOList(taskRepository.findTasksByUserIdWithUser(user.getId()));
     }
 
     public TaskResponseDTO getOwnTask(Long id) {

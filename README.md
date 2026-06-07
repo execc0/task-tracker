@@ -42,6 +42,7 @@ cd task-tracker
 POSTGRES_DB=tasktracker
 POSTGRES_USER=your_user
 POSTGRES_PASSWORD=your_password
+POSTGRES_PORT=5432
 ```
 
 ### 3. JWT Secret Key
@@ -70,6 +71,29 @@ docker-compose up -d
 ```
 
 Liquibase автоматически применит все миграции при старте.
+
+### 6. Тестирование API
+#### Swagger UI
+После запуска приложения документация доступна по адресу:
+http://localhost:8080/swagger-ui.html
+Для тестирования эндпоинтов необходимо:
+1. Зарегистрироваться через POST /auth/register
+2. Авторизоваться POST /auth/login — скопировать JWT токен из ответа.
+3. Нажать **Authorize** → вставить токен → **Authorize**
+4. Все эндпоинты теперь доступны
+#### Postman Collection
+Импортировать готовую коллекцию запросов task-tracker.postman_collection.json:
+1. Открыть Postman → **Import** → выбрать файл
+2. Создать пользователя через **Auth → register**
+3. Авторизоваться через **Auth → Login (User)** или **Auth → Login (Admin)** — токен сохранится автоматически
+4. Все запросы разбиты по папкам с настроенной авторизацией
+
+> **Примечание:** Первый администратор создаётся вручную через БД.
+> Необходимо зарегистрировать пользователя через API, затем выполнить SQL запрос:
+> ```sql
+> UPDATE users SET role = 'ADMIN' WHERE username = 'your_username';
+> ```
+> После этого все последующие назначения ролей можно делать через `PATCH /users/{id}/role` от имени администратора.
 
 ---
 

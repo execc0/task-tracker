@@ -1,15 +1,20 @@
 package org.example.task_tracker.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.example.task_tracker.DTO.mapper.TaskMapper;
 import org.example.task_tracker.DTO.response.TaskResponseDTO;
 import org.example.task_tracker.exception.ResourceNotFoundException;
-import org.example.task_tracker.kafka.TaskStatusProducer;
+import org.example.task_tracker.kafka.KafkaTopics;
 import org.example.task_tracker.model.Role;
 import org.example.task_tracker.model.Status;
 import org.example.task_tracker.model.Task;
 import org.example.task_tracker.model.User;
+import org.example.task_tracker.outbox.OutboxEvent;
+import org.example.task_tracker.outbox.OutboxRepository;
+import org.example.task_tracker.outbox.TaskStatusPayload;
 import org.example.task_tracker.repository.TaskRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,16 +28,18 @@ import java.util.List;
 @Slf4j
 public class TaskService {
 
+    private final OutboxRepository outboxRepository;
     private final TaskMapper taskMapper;
-    private final TaskStatusProducer producer;
     private final TaskRepository taskRepository;
     private final UserService userService;
+    private final ObjectMapper objectMapper;
 
-    public TaskService(TaskMapper taskMapper, TaskStatusProducer producer, TaskRepository taskRepository, UserService userService) {
+    public TaskService(OutboxRepository outboxRepository, TaskMapper taskMapper, TaskRepository taskRepository, UserService userService, ObjectMapper objectMapper) {
+        this.outboxRepository = outboxRepository;
         this.taskMapper = taskMapper;
-        this.producer = producer;
         this.taskRepository = taskRepository;
         this.userService = userService;
+        this.objectMapper = objectMapper;
     }
 
 
@@ -160,7 +167,10 @@ public class TaskService {
         }
         task.setStatus(status);
         Task saved = taskRepository.save(task);
-        producer.sendStatusChange(id, task.getUser().getId(), status.name());
+        TaskStatusPayload payload = new TaskStatusPayload(saved.getId(), saved.getStatus().toString(), user.getId());
+        String payloadJson = toJson(payload);
+        OutboxEvent outboxEvent = new OutboxEvent(KafkaTopics.TASK_STATUS_CHANGED, Long.toString(saved.getId()), payloadJson);
+        outboxRepository.save(outboxEvent);
         log.info("Task taskId = {} changed status to {} by userId = {}", saved.getId(), saved.getStatus(), user.getId());
         return taskMapper.toDTO(saved);
     }
@@ -199,6 +209,14 @@ public class TaskService {
         taskToUpdate.setDeadline(updatedTask.getDeadline());
         taskToUpdate.setDescription(updatedTask.getDescription());
         return taskToUpdate;
+    }
+
+    private String toJson(Object payload) {
+        try {
+            return objectMapper.writeValueAsString(payload);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Ошибка сериализации", e);
+        }
     }
 
 }

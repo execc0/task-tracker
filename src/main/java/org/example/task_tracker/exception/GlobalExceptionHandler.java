@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -99,6 +100,14 @@ public class GlobalExceptionHandler {
         map.put("status", 403);
         map.put("message", e.getMessage());
         return new ResponseEntity<>(map, HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(UsernameNotFoundException.class)
+    public ResponseEntity<Object> handleUsernameNotFound(UsernameNotFoundException e) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("status", 404);
+        map.put("message", e.getMessage());
+        return new ResponseEntity<>(map, HttpStatus.NOT_FOUND);
     }
 
 }

@@ -1,11 +1,13 @@
 package org.example.task_tracker.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.task_tracker.DTO.mapper.TaskMapper;
 import org.example.task_tracker.DTO.mapper.UserMapper;
 import org.example.task_tracker.DTO.response.TaskResponseDTO;
 import org.example.task_tracker.exception.ResourceNotFoundException;
-import org.example.task_tracker.kafka.TaskStatusProducer;
 import org.example.task_tracker.model.*;
+import org.example.task_tracker.outbox.OutboxEvent;
+import org.example.task_tracker.outbox.OutboxRepository;
 import org.example.task_tracker.repository.TaskRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -37,13 +39,16 @@ class TaskServiceTest {
     private UserService userService;
 
     @Mock
-    private TaskStatusProducer producer;
+    private OutboxRepository outboxRepository;
 
     @Spy
     private UserMapper userMapper = new UserMapper();
 
     @Spy
     private TaskMapper taskMapper = new TaskMapper(userMapper);
+
+    @Spy
+    private ObjectMapper objectMapper = new ObjectMapper();
 
     @InjectMocks
     private TaskService taskService;
@@ -198,6 +203,7 @@ class TaskServiceTest {
             when(taskRepository.save(task)).thenReturn(task);
 
             TaskResponseDTO updatedTask = taskService.updateOwnTaskStatus(1L, newStatus);
+            verify(outboxRepository, times(1)).save(any(OutboxEvent.class));
 
             assertEquals(newStatus, updatedTask.getStatus());
         }

@@ -3,6 +3,7 @@ package org.example.task_tracker.controller;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import org.example.task_tracker.DTO.response.AdminUserResponseDTO;
 import org.example.task_tracker.DTO.response.UserResponseDTO;
 import org.example.task_tracker.model.Role;
 import org.example.task_tracker.service.UserService;
@@ -27,13 +28,13 @@ public class UserController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public List<UserResponseDTO> getAllUsers() {
+    public List<AdminUserResponseDTO> getAllUsers() {
         return userService.getAllUsers();
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public UserResponseDTO getUserById(@PathVariable Long id) {
+    public AdminUserResponseDTO getUserById(@PathVariable Long id) {
         return userService.getUserById(id);
     }
 

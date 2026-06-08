@@ -5,6 +5,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.task_tracker.model.User;
 import org.example.task_tracker.security.jwt.JwtService;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +21,7 @@ public class AuthController {
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
+    @CacheEvict(value = "users", allEntries = true)
     public ResponseEntity<Object> register(@Valid @RequestBody RegisterRequest request) {
         HashMap<String, String> response = new HashMap<>();
         User user = authService.register(request);

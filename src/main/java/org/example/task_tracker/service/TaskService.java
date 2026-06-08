@@ -16,6 +16,9 @@ import org.example.task_tracker.outbox.OutboxEvent;
 import org.example.task_tracker.outbox.OutboxRepository;
 import org.example.task_tracker.outbox.TaskStatusPayload;
 import org.example.task_tracker.repository.TaskRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
@@ -45,6 +48,10 @@ public class TaskService {
 
     // Методы, которые вызываются только с ролью ADMIN
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "tasks", allEntries = true),
+            @CacheEvict(value = "availableTasks", allEntries = true)
+    })
     public TaskResponseDTO createTask(@Valid Task task) {
         User user = userService.getCurrentUser();
         Task saved = taskRepository.save(task);
@@ -58,12 +65,17 @@ public class TaskService {
         return taskMapper.toDTO(task);
     }
 
+    @Cacheable("tasks")
     public List<TaskResponseDTO> getAllTasks() {
         List<Task> taskList = taskRepository.findAllWithUsers();
         return taskMapper.toDTOList(taskList);
     }
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "tasks", allEntries = true),
+            @CacheEvict(value = "availableTasks", allEntries = true)
+    })
     public void deleteTask(Long id) {
         User user = userService.getCurrentUser();
         taskRepository.deleteById(id);
@@ -71,6 +83,10 @@ public class TaskService {
     }
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "tasks", allEntries = true),
+            @CacheEvict(value = "availableTasks", allEntries = true)
+    })
     public TaskResponseDTO updateTask(Long id, @Valid Task updatedTask) {
         Task taskToUpdate = taskRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Задача не найдена - указан неверный id"));
@@ -83,6 +99,7 @@ public class TaskService {
     }
 
     @Transactional
+    @CacheEvict(value = "tasks", allEntries = true)
     public TaskResponseDTO updateTaskStatus(Long id, Status status) {
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Задача не найдена - указан неверный id"));
@@ -100,6 +117,7 @@ public class TaskService {
 
 
     // Всё что ниже - методы, которые вызываются с ролью USER (или ADMIN)
+    @Cacheable("available_tasks")
     public List<TaskResponseDTO> getAvailableTasks() {
         return taskMapper.toDTOList(taskRepository.findTasksByUserIsNull());
     }
@@ -120,6 +138,7 @@ public class TaskService {
     }
 
     @Transactional
+    @CacheEvict(value = "tasks", allEntries = true)
     public TaskResponseDTO createOwnTask(@Valid Task task) {
         User user = userService.getCurrentUser();
         Long taskCount = taskRepository.countTasksByUserIdAndStatusIn(user.getId(), List.of(Status.TODO, Status.IN_PROGRESS));
@@ -135,6 +154,7 @@ public class TaskService {
     }
 
     @Transactional
+    @CacheEvict(value = "tasks", allEntries = true)
     public TaskResponseDTO updateOwnTask(Long id, @Valid Task updatedTask) {
         Task taskToUpdate = taskRepository.findTaskById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Задача не найдена - указан неверный id"));
@@ -142,6 +162,7 @@ public class TaskService {
         if (taskToUpdate.getUser() == null || taskToUpdate.getUser().getId() != user.getId()) {
             throw new ResourceNotFoundException("Задача не найдена - указан неверный id");
         }
+        validateStatusChange(taskToUpdate.getStatus(), updatedTask.getStatus(), taskToUpdate.getId());
         Task resultTask = updateTaskFields(taskToUpdate, updatedTask);
         Task saved = taskRepository.save(resultTask);
         log.info("Task taskId = {} updated by user userId = {}", saved.getId(), user.getId());
@@ -149,23 +170,17 @@ public class TaskService {
     }
 
     @Transactional
-    public TaskResponseDTO updateOwnTaskStatus(Long id, Status status) {
+    @CacheEvict(value = "tasks", allEntries = true)
+    public TaskResponseDTO updateOwnTaskStatus(Long id, Status newStatus) {
         Task task = taskRepository.findTaskById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Задача не найдена - указан неверный id"));
-        if (task.getStatus() == Status.DONE) {
-            log.warn("Attempt to change status DONE of task with taskId = {}", task.getId());
-            throw new IllegalStateException("Нельзя изменить статус завершённой задачи");
-        }
-        if (task.getStatus() == Status.IN_PROGRESS && (status == Status.TODO)) {
-            log.warn("Attempt to set status IN_PROGRESS to TODO of task with taskId = {}", task.getId());
-            throw new IllegalStateException("Нельзя изменить статус задачи с IN PROGRESS на TODO");
-        }
+        validateStatusChange(task.getStatus(), newStatus, task.getId());
         User user = userService.getCurrentUser();
         if (task.getUser().getId() != user.getId()) {
             log.warn("Attempt to change someone else's task taskId = {} by user userId = {}", task.getId(), user.getId());
             throw new ResourceNotFoundException("Задача не найдена - указан неверный id");
         }
-        task.setStatus(status);
+        task.setStatus(newStatus);
         Task saved = taskRepository.save(task);
         TaskStatusPayload payload = new TaskStatusPayload(saved.getId(), saved.getStatus().toString(), user.getId());
         String payloadJson = toJson(payload);
@@ -176,6 +191,10 @@ public class TaskService {
     }
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "tasks", allEntries = true),
+            @CacheEvict(value = "availableTasks", allEntries = true)
+    })
     public TaskResponseDTO takeAvailableTask(Long id) {
         Task task = taskRepository.findTaskById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Задача не найдена - указан неверный id"));
@@ -191,6 +210,7 @@ public class TaskService {
     }
 
     @Transactional
+    @CacheEvict(value = "tasks", allEntries = true)
     public void deleteOwnTask(Long id) {
         User user = userService.getCurrentUser();
         Task task = taskRepository.findTaskById(id)
@@ -211,6 +231,17 @@ public class TaskService {
         return taskToUpdate;
     }
 
+    private void validateStatusChange(Status oldStatus, Status newStatus, Long taskId) {
+        if (oldStatus == Status.DONE) {
+            log.warn("Attempt to change status DONE of task with taskId = {}", taskId);
+            throw new IllegalStateException("Нельзя изменить статус завершённой задачи");
+        }
+        if (oldStatus == Status.IN_PROGRESS && (newStatus == Status.TODO)) {
+            log.warn("Attempt to set status IN_PROGRESS to TODO of task with taskId = {}", taskId);
+            throw new IllegalStateException("Нельзя изменить статус задачи с IN PROGRESS на TODO");
+        }
+    }
+
     private String toJson(Object payload) {
         try {
             return objectMapper.writeValueAsString(payload);
@@ -218,5 +249,6 @@ public class TaskService {
             throw new RuntimeException("Ошибка сериализации", e);
         }
     }
+
 
 }

@@ -1,5 +1,6 @@
 package org.example.task_tracker.DTO.mapper;
 
+import org.example.task_tracker.DTO.response.AdminUserResponseDTO;
 import org.example.task_tracker.DTO.response.UserResponseDTO;
 import org.example.task_tracker.model.User;
 import org.springframework.stereotype.Component;
@@ -18,9 +19,25 @@ public class UserMapper {
         return userResponseDTO;
     }
 
+    public AdminUserResponseDTO toAdminDTO(User user) {
+        AdminUserResponseDTO adminUserResponseDTO = new AdminUserResponseDTO();
+        adminUserResponseDTO.setId(user.getId());
+        adminUserResponseDTO.setName(user.getName());
+        adminUserResponseDTO.setEmail(user.getEmail());
+        adminUserResponseDTO.setUsername(user.getUsername());
+        adminUserResponseDTO.setRole(user.getRole());
+        return adminUserResponseDTO;
+    }
+
     public List<UserResponseDTO> toDTOList(List<User> userList) {
         return userList.stream()
                 .map(user -> toDTO(user))
+                .toList();
+    }
+
+    public List<AdminUserResponseDTO> toAdminDTOList(List<User> userList) {
+        return userList.stream()
+                .map(user -> toAdminDTO(user))
                 .toList();
     }
 }

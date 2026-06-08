@@ -4,12 +4,16 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.extern.slf4j.Slf4j;
 import org.example.task_tracker.DTO.mapper.UserMapper;
+import org.example.task_tracker.DTO.response.AdminUserResponseDTO;
 import org.example.task_tracker.DTO.response.UserResponseDTO;
 import org.example.task_tracker.exception.ResourceNotFoundException;
 import org.example.task_tracker.exception.UserAlreadyExistsException;
 import org.example.task_tracker.model.Role;
 import org.example.task_tracker.model.User;
 import org.example.task_tracker.repository.UserRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -35,17 +39,22 @@ public class UserService {
     }
 
     // Методы, которые вызываются только с ролью ADMIN
-    public UserResponseDTO getUserById(Long id) {
+    public AdminUserResponseDTO getUserById(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Неверно указан id пользователя"));
-        return userMapper.toDTO(user);
+        return userMapper.toAdminDTO(user);
     }
 
-    public List<UserResponseDTO> getAllUsers() {
-        return userMapper.toDTOList(userRepository.findAll());
+    @Cacheable("users")
+    public List<AdminUserResponseDTO> getAllUsers() {
+        return userMapper.toAdminDTOList(userRepository.findAll());
     }
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "tasks", allEntries = true),
+            @CacheEvict(value = "users", allEntries = true)
+    })
     public UserResponseDTO updateUserEmail(@NotBlank @Email String email, Long id) {
         User currentUser = getCurrentUser();
         if (userRepository.findUserByEmail(email).isPresent()) {
@@ -62,6 +71,10 @@ public class UserService {
     }
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "tasks", allEntries = true),
+            @CacheEvict(value = "users", allEntries = true)
+    })
     public UserResponseDTO updateUserName(@NotBlank String name, Long id) {
         User currentUser = getCurrentUser();
         User user = getUserByIdInternal(id);
@@ -72,6 +85,7 @@ public class UserService {
     }
 
     @Transactional
+    @CacheEvict(value = "users", allEntries = true)
     public UserResponseDTO updateUserRole(Role role, Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Пользователь с данным id не найден"));
@@ -83,6 +97,10 @@ public class UserService {
     }
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "tasks", allEntries = true),
+            @CacheEvict(value = "users", allEntries = true)
+    })
     public void deleteUserById(Long id) {
         User user = getCurrentUser();
         userRepository.deleteById(id);
@@ -91,6 +109,10 @@ public class UserService {
 
     // Всё что ниже - методы, которые вызываются с ролью USER (или ADMIN)
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "tasks", allEntries = true),
+            @CacheEvict(value = "users", allEntries = true)
+    })
     public UserResponseDTO updateOwnEmail(@NotBlank String email) {
         if (isEmailTaken(email)) {
             log.warn("Attempt to take email = {} already taken", email);
@@ -105,6 +127,10 @@ public class UserService {
     }
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "tasks", allEntries = true),
+            @CacheEvict(value = "users", allEntries = true)
+    })
     public UserResponseDTO updateOwnUsername(@NotBlank String username) {
         if (isUsernameTaken(username)) {
             log.warn("Attempt to take username = {} already taken", username);
@@ -119,6 +145,7 @@ public class UserService {
     }
 
     @Transactional
+    @CacheEvict(value = "users", allEntries = true)
     public UserResponseDTO updateOwnName(@NotBlank String name) {
         User user = getCurrentUser();
         String oldName = user.getName();

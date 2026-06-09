@@ -2,10 +2,14 @@ package org.example.task_tracker.controller;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.example.task_tracker.DTO.response.PageResponseDTO;
 import org.example.task_tracker.DTO.response.TaskResponseDTO;
 import org.example.task_tracker.model.Status;
 import org.example.task_tracker.model.Task;
 import org.example.task_tracker.service.TaskService;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -25,8 +29,11 @@ public class TaskController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public List<TaskResponseDTO> getAllTasks() {
-        return taskService.getAllTasks();
+    public PageResponseDTO<TaskResponseDTO> getAllTasks(@PageableDefault(
+            size = 10,
+            sort = "createdAt",
+            direction = Sort.Direction.DESC) Pageable pageable) {
+        return taskService.getAllTasks(pageable);
     }
 
     @GetMapping("/{id}")

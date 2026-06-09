@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.example.task_tracker.DTO.mapper.TaskMapper;
+import org.example.task_tracker.DTO.response.PageResponseDTO;
 import org.example.task_tracker.DTO.response.TaskResponseDTO;
 import org.example.task_tracker.exception.ResourceNotFoundException;
 import org.example.task_tracker.kafka.KafkaTopics;
@@ -19,6 +20,8 @@ import org.example.task_tracker.repository.TaskRepository;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
@@ -66,9 +69,16 @@ public class TaskService {
     }
 
     @Cacheable("tasks")
-    public List<TaskResponseDTO> getAllTasks() {
-        List<Task> taskList = taskRepository.findAllWithUsers();
-        return taskMapper.toDTOList(taskList);
+    public PageResponseDTO<TaskResponseDTO> getAllTasks(Pageable pageable) {
+        Page<Task> taskPage = taskRepository.findAll(pageable);
+        Page<TaskResponseDTO> dtoPage = taskPage.map(task -> taskMapper.toDTO(task));
+        return new PageResponseDTO<TaskResponseDTO>(
+                dtoPage.getContent(),
+                dtoPage.getNumber(),
+                dtoPage.getTotalPages(),
+                dtoPage.getTotalElements(),
+                dtoPage.isLast()
+        );
     }
 
     @Transactional

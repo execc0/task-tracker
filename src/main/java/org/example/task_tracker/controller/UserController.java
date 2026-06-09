@@ -4,15 +4,17 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import org.example.task_tracker.DTO.response.AdminUserResponseDTO;
+import org.example.task_tracker.DTO.response.PageResponseDTO;
 import org.example.task_tracker.DTO.response.UserResponseDTO;
 import org.example.task_tracker.model.Role;
 import org.example.task_tracker.service.UserService;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/users")
@@ -28,8 +30,12 @@ public class UserController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public List<AdminUserResponseDTO> getAllUsers() {
-        return userService.getAllUsers();
+    public PageResponseDTO<AdminUserResponseDTO> getAllUsers(@PageableDefault(
+            size = 10,
+            page = 0,
+            sort = "id",
+            direction = Sort.Direction.ASC) Pageable pageable) {
+        return userService.getAllUsers(pageable);
     }
 
     @GetMapping("/{id}")

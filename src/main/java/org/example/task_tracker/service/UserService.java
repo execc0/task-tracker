@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.extern.slf4j.Slf4j;
 import org.example.task_tracker.DTO.mapper.UserMapper;
 import org.example.task_tracker.DTO.response.AdminUserResponseDTO;
+import org.example.task_tracker.DTO.response.PageResponseDTO;
 import org.example.task_tracker.DTO.response.UserResponseDTO;
 import org.example.task_tracker.exception.ResourceNotFoundException;
 import org.example.task_tracker.exception.UserAlreadyExistsException;
@@ -14,13 +15,14 @@ import org.example.task_tracker.repository.UserRepository;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.lang.NonNull;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
-
-import java.util.List;
 
 @Service
 @Transactional(readOnly = true)
@@ -46,8 +48,16 @@ public class UserService {
     }
 
     @Cacheable("users")
-    public List<AdminUserResponseDTO> getAllUsers() {
-        return userMapper.toAdminDTOList(userRepository.findAll());
+    public PageResponseDTO<AdminUserResponseDTO> getAllUsers(@NonNull Pageable pageable) {
+        Page<User> userPage = userRepository.findAll(pageable);
+        Page<AdminUserResponseDTO> dtoPage = userPage.map(user -> userMapper.toAdminDTO(user));
+        return new PageResponseDTO<AdminUserResponseDTO>(
+                dtoPage.getContent(),
+                dtoPage.getNumber(),
+                dtoPage.getTotalPages(),
+                dtoPage.getTotalElements(),
+                dtoPage.isLast()
+        );
     }
 
     @Transactional
@@ -62,7 +72,6 @@ public class UserService {
             throw new UserAlreadyExistsException("Данный email уже занят");
         }
         User user = getUserByIdInternal(id);
-        String oldEmail = user.getEmail();
         user.setEmail(email);
         User saved = userRepository.save(user);
         log.info("User userId = {} updated email by admin userId = {}",
@@ -119,7 +128,6 @@ public class UserService {
             throw new UserAlreadyExistsException("Данный email уже занят");
         }
         User user = getCurrentUser();
-        String oldEmail = user.getEmail();
         user.setEmail(email);
         User saved = userRepository.save(user);
         log.info("User userId = {} updated OWN email", saved.getId());

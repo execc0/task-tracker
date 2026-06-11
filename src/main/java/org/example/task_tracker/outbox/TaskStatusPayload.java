@@ -13,4 +13,6 @@ public class TaskStatusPayload {
 
     private Long userId;
 
+    private String email;
+
 }

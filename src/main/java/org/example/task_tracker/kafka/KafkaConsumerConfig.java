@@ -20,9 +20,13 @@ public class KafkaConsumerConfig {
 
     @Bean
     public DefaultErrorHandler errorHandler() {
+
         DeadLetterPublishingRecoverer recoverer = new DeadLetterPublishingRecoverer(kafkaTemplate);
+
         FixedBackOff backOff = new FixedBackOff(1000L, 5L); // 5 попыток, интервал 1 секунда
+
         DefaultErrorHandler handler = new DefaultErrorHandler(recoverer, backOff);
+
         handler.setRetryListeners((record, ex, deliveryAttempt) ->
                 log.error("Ошибка обработки, попытка {}: {}", deliveryAttempt, ex.getMessage())
         );

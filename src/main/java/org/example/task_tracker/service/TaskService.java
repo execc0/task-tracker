@@ -192,7 +192,7 @@ public class TaskService {
         }
         task.setStatus(newStatus);
         Task saved = taskRepository.save(task);
-        TaskStatusPayload payload = new TaskStatusPayload(saved.getId(), saved.getStatus().toString(), user.getId());
+        TaskStatusPayload payload = new TaskStatusPayload(saved.getId(), saved.getStatus().toString(), user.getId(), user.getEmail());
         String payloadJson = toJson(payload);
         OutboxEvent outboxEvent = new OutboxEvent(KafkaTopics.TASK_STATUS_CHANGED, Long.toString(saved.getId()), payloadJson);
         outboxRepository.save(outboxEvent);

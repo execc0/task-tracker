@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class TaskStatusConsumer {
 
-    @KafkaListener(topics = KafkaTopics.TASK_STATUS_CHANGED, groupId = "task-tracker-group")
+    @KafkaListener(topics = KafkaTopics.TASK_STATUS_CHANGED, groupId = "task-tracker-group-test")
     public void onStatusChange(String message) {
         try {
             log.info("Получено сообщение из Kafka: {}", message);

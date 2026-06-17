@@ -1,7 +1,9 @@
 package org.example.task_tracker.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.task_tracker.exception.UserAlreadyExistsException;
 import org.example.task_tracker.model.User;
+import org.example.task_tracker.outbox.OutboxRepository;
 import org.example.task_tracker.repository.UserRepository;
 import org.example.task_tracker.security.auth.AuthService;
 import org.example.task_tracker.security.auth.RegisterRequest;
@@ -13,6 +15,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -33,7 +36,13 @@ public class AuthServiceTest {
 
     @Mock
     private PasswordEncoder passwordEncoder;
-    
+
+    @Mock
+    private OutboxRepository outboxRepository;
+
+    @Spy
+    private ObjectMapper objectMapper;
+
     @InjectMocks
     private AuthService authService;
 

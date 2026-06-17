@@ -174,6 +174,12 @@ public class UserService {
         return userMapper.toDTO(saved);
     }
 
+    @Transactional
+    public void deleteOwnUser() {
+        User user = getCurrentUser();
+        userRepository.deleteById(user.getId());
+    }
+
     protected User getCurrentUser() {
         User user = (User) SecurityContextHolder.getContext()
                 .getAuthentication()

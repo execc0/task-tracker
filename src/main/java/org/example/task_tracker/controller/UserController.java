@@ -90,4 +90,8 @@ public class UserController {
         return userService.updateOwnName(name);
     }
 
+    @DeleteMapping("/me")
+    public void deleteOwnUser() {
+        userService.deleteOwnUser();
+    }
 }

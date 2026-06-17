@@ -1,5 +1,7 @@
 package org.example.task_tracker.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.extern.slf4j.Slf4j;
@@ -9,8 +11,12 @@ import org.example.task_tracker.DTO.response.PageResponseDTO;
 import org.example.task_tracker.DTO.response.UserResponseDTO;
 import org.example.task_tracker.exception.ResourceNotFoundException;
 import org.example.task_tracker.exception.UserAlreadyExistsException;
+import org.example.task_tracker.kafka.KafkaTopics;
 import org.example.task_tracker.model.Role;
 import org.example.task_tracker.model.User;
+import org.example.task_tracker.outbox.OutboxEvent;
+import org.example.task_tracker.outbox.OutboxRepository;
+import org.example.task_tracker.outbox.payload.UserPayload;
 import org.example.task_tracker.repository.UserRepository;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -33,11 +39,15 @@ public class UserService {
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
+    private final ObjectMapper objectMapper;
+    private final OutboxRepository outboxRepository;
 
-    public UserService(UserMapper userMapper, PasswordEncoder passwordEncoder, UserRepository userRepository) {
+    public UserService(UserMapper userMapper, PasswordEncoder passwordEncoder, UserRepository userRepository, ObjectMapper objectMapper, OutboxRepository outboxRepository) {
         this.userMapper = userMapper;
         this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
+        this.objectMapper = objectMapper;
+        this.outboxRepository = outboxRepository;
     }
 
     // Методы, которые вызываются только с ролью ADMIN
@@ -113,6 +123,7 @@ public class UserService {
     public void deleteUserById(Long id) {
         User user = getCurrentUser();
         userRepository.deleteById(id);
+        sendDeleteUserEventToOutbox(user);
         log.info("User userId = {} deleted by admin userId = {}", id, user.getId());
     }
 
@@ -178,6 +189,8 @@ public class UserService {
     public void deleteOwnUser() {
         User user = getCurrentUser();
         userRepository.deleteById(user.getId());
+        sendDeleteUserEventToOutbox(user);
+        log.info("User userId = {} deleted", user.getId());
     }
 
     protected User getCurrentUser() {
@@ -198,6 +211,22 @@ public class UserService {
 
     protected boolean isUsernameTaken(String username) {
         return userRepository.findUserByUsername(username).isPresent();
+    }
+
+    private String toJson(Object payload) {
+        try {
+            return objectMapper.writeValueAsString(payload);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Ошибка сериализации", e);
+        }
+    }
+
+    private void sendDeleteUserEventToOutbox(User user) {
+        UserPayload userPayload = new UserPayload(user.getUsername(), user.getName(), user.getEmail());
+        String jsonPayload = toJson(userPayload);
+        OutboxEvent outboxEvent = new OutboxEvent(KafkaTopics.USER_DELETED, user.getUsername(), jsonPayload);
+        outboxRepository.save(outboxEvent);
+        log.info("User deleted event sent to outbox: {}", outboxEvent);
     }
 
 }

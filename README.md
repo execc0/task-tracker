@@ -3,7 +3,7 @@
 REST API для управления задачами, написанный в учебных целях с упором на реальные практики разработки на Java/Spring Boot.
 
 🔗 [GitHub Repository](https://github.com/execc0/task-tracker)
-
+>  **Notification Service** — отдельный микросервис, который слушает события Task Tracker через Apache Kafka (изменение статуса задачи, регистрация и удаление пользователя) и отправляет email-уведомления. Репозиторий: [github.com/execc0/notification-service](https://github.com/execc0/notification-service).
 ---
 
 ## 🚀 Стек технологий

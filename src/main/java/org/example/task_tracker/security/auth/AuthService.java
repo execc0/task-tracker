@@ -54,7 +54,7 @@ public class AuthService {
         User saved = userRepository.save(user);
         UserPayload payload = new UserPayload(user.getUsername(), user.getName(), user.getEmail());
         String jsonPayload = toJson(payload);
-        OutboxEvent outboxEvent = new OutboxEvent(KafkaTopics.USER_DELETED, user.getUsername(), jsonPayload);
+        OutboxEvent outboxEvent = new OutboxEvent(KafkaTopics.USER_REGISTERED, user.getUsername(), jsonPayload);
         outboxRepository.save(outboxEvent);
         log.info("New user registered, username = {}, name = {}",
                 saved.getUsername(), saved.getName());

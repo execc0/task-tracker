@@ -121,7 +121,8 @@ public class UserService {
             @CacheEvict(value = "users", allEntries = true)
     })
     public void deleteUserById(Long id) {
-        User user = getCurrentUser();
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Пользователь с данным id не найден"));
         userRepository.deleteById(id);
         sendDeleteUserEventToOutbox(user);
         log.info("User userId = {} deleted by admin userId = {}", id, user.getId());

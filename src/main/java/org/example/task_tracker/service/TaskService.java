@@ -15,7 +15,7 @@ import org.example.task_tracker.model.Task;
 import org.example.task_tracker.model.User;
 import org.example.task_tracker.outbox.OutboxEvent;
 import org.example.task_tracker.outbox.OutboxRepository;
-import org.example.task_tracker.outbox.TaskStatusPayload;
+import org.example.task_tracker.outbox.payload.TaskStatusPayload;
 import org.example.task_tracker.repository.TaskRepository;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;

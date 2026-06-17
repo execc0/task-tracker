@@ -1,4 +1,4 @@
-package org.example.task_tracker.outbox;
+package org.example.task_tracker.outbox.payload;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

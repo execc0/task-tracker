@@ -47,6 +47,13 @@ public class User implements UserDetails {
     public User() {
     }
 
+    public User(String name, String email, String username, String passwordEncoded) {
+        this.name = name;
+        this.email = email;
+        this.username = username;
+        this.password = passwordEncoded;
+    }
+
     @Override
     @JsonIgnore
     public Collection<? extends GrantedAuthority> getAuthorities() {

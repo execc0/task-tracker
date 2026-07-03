@@ -40,8 +40,12 @@ public class RateLimitFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
-        String ip = request.getRemoteAddr();
-
+        String ip = request.getHeader("X-Forwarded-For"); // может быть опасно если нет никакого промежуточного сервера между клиентом и API !!!
+        if (ip == null) {
+            ip = request.getRemoteAddr();
+        } else {
+            ip = ip.split(",")[0].trim();
+        }
 
         if (buckets.get(ip) == null) {
             Bucket bucket = createNewBucket();
@@ -54,8 +58,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
         } else {
             Map<String, Object> body = new HashMap<>();
-            body.put("status:", 429);
-            body.put("message:", "Слишком много запросов / too many requests");
+            body.put("status", 429);
+            body.put("message", "Слишком много запросов / too many requests");
             response.setStatus(429);
             response.setContentType("application/json;charset=UTF-8");
             String jsonBody = objectMapper.writeValueAsString(body);

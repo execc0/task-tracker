@@ -23,7 +23,7 @@ public class TelegramSecurityService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public boolean verifySignature(String dataToSign, String providedSignature) {
+    public boolean signatureIsValid(String dataToSign, String providedSignature) {
         try {
 
             SecretKey secretKey = getSigningKey(this.secretKey);

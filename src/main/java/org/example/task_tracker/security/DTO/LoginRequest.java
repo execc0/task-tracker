@@ -1,10 +1,11 @@
-package org.example.task_tracker.security.auth;
+package org.example.task_tracker.security.DTO;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
 public class LoginRequest {
+
     @NotBlank(message = "Username не может быть пустым")
     private String username;
 

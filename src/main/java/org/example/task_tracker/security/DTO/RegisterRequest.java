@@ -1,4 +1,4 @@
-package org.example.task_tracker.security.auth;
+package org.example.task_tracker.security.DTO;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

@@ -1,4 +1,4 @@
-package org.example.task_tracker.security;
+package org.example.task_tracker.security.config;
 
 import org.example.task_tracker.repository.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;

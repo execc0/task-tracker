@@ -21,15 +21,15 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<Object> handleNotFound(ResourceNotFoundException e) {
+    public ResponseEntity<?> handleNotFound(ResourceNotFoundException e) {
         Map<String, Object> map = new HashMap<>();
         map.put("status", 404);
         map.put("message", e.getMessage());
-        return new ResponseEntity<Object>(map, HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(map, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<Object> handleInvalidData(HttpMessageNotReadableException e) {
+    public ResponseEntity<?> handleInvalidData(HttpMessageNotReadableException e) {
         Map<String, Object> map = new HashMap<>();
         map.put("status", 400);
         map.put("message", "Неверный формат JSON или неверный тип данных одного из значений");
@@ -37,16 +37,16 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Object> handleExceptions(Exception e) {
+    public ResponseEntity<?> handleExceptions(Exception e) {
         log.error("Unhandled exception: ", e);
         Map<String, Object> map = new HashMap<>();
         map.put("status", 500);
         map.put("message", "Внутренняя ошибка сервера / Internal server error");
-        return new ResponseEntity<Object>(map, HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<>(map, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Object> handleValidation(MethodArgumentNotValidException e) {
+    public ResponseEntity<?> handleValidation(MethodArgumentNotValidException e) {
         Map<String, Object> map = new HashMap<>();
         map.put("status", 400);
         List<String> errors = e.getBindingResult()
@@ -59,7 +59,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(IllegalStateException.class)
-    public ResponseEntity<Object> handleIllegalState(IllegalStateException e) {
+    public ResponseEntity<?> handleIllegalState(IllegalStateException e) {
         Map<String, Object> map = new HashMap<>();
         map.put("status", 400);
         map.put("errors", e.getMessage());
@@ -67,7 +67,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<Object> handleConstraintViolation(ConstraintViolationException e) {
+    public ResponseEntity<?> handleConstraintViolation(ConstraintViolationException e) {
         Map<String, Object> map = new HashMap<>();
         map.put("status", 400);
         List<String> errors = e.getConstraintViolations()
@@ -79,7 +79,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<Object> handleBadCredentials(BadCredentialsException e) {
+    public ResponseEntity<?> handleBadCredentials(BadCredentialsException e) {
         Map<String, Object> map = new HashMap<>();
         map.put("status", 401);
         map.put("message", "Неверный username или password");
@@ -87,7 +87,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(UserAlreadyExistsException.class)
-    public ResponseEntity<Object> handleUserAlreadyExists(UserAlreadyExistsException e) {
+    public ResponseEntity<?> handleUserAlreadyExists(UserAlreadyExistsException e) {
         Map<String, Object> map = new HashMap<>();
         map.put("status", 400);
         map.put("message", e.getMessage());
@@ -95,7 +95,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(AuthorizationDeniedException.class)
-    public ResponseEntity<Object> handleUnauthorizedAccess(AuthorizationDeniedException e) {
+    public ResponseEntity<?> handleUnauthorizedAccess(AuthorizationDeniedException e) {
         Map<String, Object> map = new HashMap<>();
         map.put("status", 403);
         map.put("message", e.getMessage());
@@ -103,7 +103,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(UsernameNotFoundException.class)
-    public ResponseEntity<Object> handleUsernameNotFound(UsernameNotFoundException e) {
+    public ResponseEntity<?> handleUsernameNotFound(UsernameNotFoundException e) {
         Map<String, Object> map = new HashMap<>();
         map.put("status", 404);
         map.put("message", e.getMessage());

@@ -24,8 +24,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-
 @Service
 @Transactional(readOnly = true)
 @Slf4j
@@ -76,10 +74,7 @@ public class AuthService {
     }
 
     public void loginTelegram(LoginRequestTelegram request) {
-        HashMap<String, String> payload = new HashMap<>();
-        payload.put("chatId", request.getChatId());
-        payload.put("timestamp", request.getTimestamp());
-        if (!telegramSecurityService.signatureIsValid(toJson(payload), request.getSignature())) {
+        if (!telegramSecurityService.signatureIsValid(request)) {
             log.error("Подпись HMAC не совпала при проверке: {}", request);
             throw new AuthorizationDeniedException("Не удалось авторизовать пользователя");
         }

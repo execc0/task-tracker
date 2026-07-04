@@ -13,7 +13,7 @@ public class RegisterRequestTelegram {
     @NotBlank(message = "chatId не может быть пустым")
     private String chatId;
 
-    @NotBlank(message = "signature не может быть пустым")
-    private String signature;
+    @NotBlank(message = "JWTtoken не может быть пустым")
+    private String JWTtoken;
 
 }

@@ -3,6 +3,7 @@ package org.example.task_tracker.security.telegram;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
+import org.example.task_tracker.security.DTO.LoginRequestTelegram;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -23,9 +24,9 @@ public class TelegramSecurityService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public boolean signatureIsValid(String dataToSign, String providedSignature) {
+    public boolean signatureIsValid(LoginRequestTelegram request) {
         try {
-
+            String dataToSign = toCanonicalString(request);
             SecretKey secretKey = getSigningKey(this.secretKey);
 
             Mac sha512Hmac = Mac.getInstance("HmacSHA512");
@@ -33,7 +34,7 @@ public class TelegramSecurityService {
 
             byte[] hashBytes = sha512Hmac.doFinal(dataToSign.getBytes(StandardCharsets.UTF_8));
 
-            return bytesToHex(hashBytes).equals(providedSignature);
+            return bytesToHex(hashBytes).equals(request.getSignature());
 
         } catch (Exception e) {
             log.error("Произошла ошибка при проверке HMAC подписи для Telegram: {}", e.getMessage());
@@ -47,5 +48,9 @@ public class TelegramSecurityService {
             sb.append(String.format("%02x", b));
         }
         return sb.toString();
+    }
+
+    private String toCanonicalString(LoginRequestTelegram request) {
+        return String.format("%s|%s|%d", request.getProviderId(), request.getChatId(), request.getTimestamp());
     }
 }

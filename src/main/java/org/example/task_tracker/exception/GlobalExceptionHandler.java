@@ -110,4 +110,20 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(map, HttpStatus.NOT_FOUND);
     }
 
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<?> handleUserNotFound(UserNotFoundException e) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("status", 404);
+        map.put("message", e.getMessage());
+        return new ResponseEntity<>(map, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(SocialLinkException.class)
+    public ResponseEntity<?> handleSocialLinkException(SocialLinkException e) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("status", 40);
+        map.put("message", e.getMessage());
+        return new ResponseEntity<>(map, HttpStatus.BAD_REQUEST);
+    }
+
 }

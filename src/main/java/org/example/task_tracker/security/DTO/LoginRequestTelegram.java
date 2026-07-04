@@ -6,11 +6,14 @@ import lombok.Data;
 @Data
 public class LoginRequestTelegram {
 
+    @NotBlank(message = "providerId не может быть пустым")
+    private String providerId;
+
     @NotBlank(message = "chatId не может быть пустым")
     private String chatId;
 
     @NotBlank(message = "timestamp не может быть пустым")
-    private String timestamp;
+    private Long timestamp;
 
     @NotBlank(message = "signature не может быть пустым")
     private String signature;

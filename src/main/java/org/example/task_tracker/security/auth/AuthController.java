@@ -41,7 +41,7 @@ public class AuthController {
     public void linkSocial(@Valid @RequestBody LinkSocialRequest request) {
         socialService.linkSocial(request);
     }
-    
+
     @PostMapping("/login/telegram")
     public AuthResponse loginTelegram(@Valid @RequestBody LoginRequestTelegram request) {
         authService.loginTelegram(request);

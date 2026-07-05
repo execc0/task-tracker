@@ -62,7 +62,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<?> handleIllegalState(IllegalStateException e) {
         Map<String, Object> map = new HashMap<>();
         map.put("status", 400);
-        map.put("errors", e.getMessage());
+        map.put("message", e.getMessage());
         return new ResponseEntity<>(map, HttpStatus.BAD_REQUEST);
     }
 
@@ -121,7 +121,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(SocialLinkException.class)
     public ResponseEntity<?> handleSocialLinkException(SocialLinkException e) {
         Map<String, Object> map = new HashMap<>();
-        map.put("status", 40);
+        map.put("status", 400);
         map.put("message", e.getMessage());
         return new ResponseEntity<>(map, HttpStatus.BAD_REQUEST);
     }

@@ -3,17 +3,19 @@ package org.example.task_tracker.security.telegram;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
-import org.example.task_tracker.security.DTO.LoginRequestTelegram;
+import org.example.task_tracker.security.DTO.social.signable.Signable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
-public class TelegramSecurityService {
+public class HmacSignatureService {
 
     @Value("${bot.secret}")
     private String secretKey;
@@ -24,7 +26,7 @@ public class TelegramSecurityService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public boolean signatureIsValid(LoginRequestTelegram request) {
+    public boolean signatureIsValid(Signable request) {
         try {
             String dataToSign = toCanonicalString(request);
             SecretKey secretKey = getSigningKey(this.secretKey);
@@ -50,7 +52,11 @@ public class TelegramSecurityService {
         return sb.toString();
     }
 
-    private String toCanonicalString(LoginRequestTelegram request) {
-        return String.format("%s|%s|%d", request.getProviderId(), request.getChatId(), request.getTimestamp());
+    private String toCanonicalString(Signable signable) {
+        List<Object> listOfFields = signable.getSignableFields();
+
+        return listOfFields.stream()
+                .map(field -> field.toString())
+                .collect(Collectors.joining("|"));
     }
 }

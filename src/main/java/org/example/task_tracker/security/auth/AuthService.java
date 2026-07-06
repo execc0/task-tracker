@@ -11,18 +11,26 @@ import org.example.task_tracker.model.User;
 import org.example.task_tracker.outbox.OutboxEvent;
 import org.example.task_tracker.outbox.OutboxRepository;
 import org.example.task_tracker.outbox.payload.UserPayload;
+import org.example.task_tracker.repository.SocialRepository;
 import org.example.task_tracker.repository.UserRepository;
+import org.example.task_tracker.security.DTO.AuthResponse;
 import org.example.task_tracker.security.DTO.LoginRequest;
-import org.example.task_tracker.security.DTO.LoginRequestTelegram;
 import org.example.task_tracker.security.DTO.RegisterRequest;
-import org.example.task_tracker.security.telegram.TelegramSecurityService;
+import org.example.task_tracker.security.DTO.social.signable.*;
+import org.example.task_tracker.security.jwt.JwtService;
+import org.example.task_tracker.security.telegram.HmacSignatureService;
+import org.example.task_tracker.service.SocialService;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.authorization.AuthorizationDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Locale;
 
 @Service
 @Transactional(readOnly = true)
@@ -34,17 +42,23 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final ObjectMapper objectMapper;
-    private final TelegramSecurityService telegramSecurityService;
+    private final HmacSignatureService hmacSignatureService;
     private final OutboxRepository outboxRepository;
+    private final SocialService socialService;
+    private final JwtService jwtService;
+    private final SocialRepository socialRepository;
 
     public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder,
-                       AuthenticationManager authenticationManager, ObjectMapper objectMapper, TelegramSecurityService telegramSecurityService, OutboxRepository outboxRepository) {
+                       AuthenticationManager authenticationManager, ObjectMapper objectMapper, HmacSignatureService hmacSignatureService, OutboxRepository outboxRepository, SocialService socialService, JwtService jwtService, SocialRepository socialRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.objectMapper = objectMapper;
-        this.telegramSecurityService = telegramSecurityService;
+        this.hmacSignatureService = hmacSignatureService;
         this.outboxRepository = outboxRepository;
+        this.socialService = socialService;
+        this.jwtService = jwtService;
+        this.socialRepository = socialRepository;
     }
 
     @Transactional
@@ -69,15 +83,57 @@ public class AuthService {
     }
 
     public void login(LoginRequest request) {
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
+        Authentication auth = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
+        SecurityContextHolder.getContext().setAuthentication(auth);
         log.info("User logged in username = {}", request.getUsername());
     }
 
-    public void loginTelegram(LoginRequestTelegram request) {
-        if (!telegramSecurityService.signatureIsValid(request)) {
-            log.error("Подпись HMAC не совпала при проверке: {}", request);
-            throw new AuthorizationDeniedException("Не удалось авторизовать пользователя");
+    @Transactional
+    public AuthResponse loginAndLink(LoginAndLinkRequest request) {
+
+        LinkRequest linkRequest = request.getLinkRequest();
+
+        verifyHMAC(linkRequest);
+
+        if (socialRepository.findByProviderAndProviderId(linkRequest.getProvider().toLowerCase(Locale.ROOT),
+                linkRequest.getProviderId()).isPresent()) {
+            throw new UserAlreadyExistsException("Вы уже зарегистрированы, сначала отвяжите аккаунт командой /unlink");
         }
+
+        login(request.getLoginRequest());
+        socialService.linkSocial(linkRequest);
+
+        User user = findByUsername(request.getLoginRequest().getUsername());
+        return new AuthResponse(jwtService.generateToken(user));
+
+    }
+
+    @Transactional
+    public AuthResponse registerAndLink(RegisterAndLinkRequest request) {
+
+        LinkRequest linkRequest = request.getLinkRequest();
+
+        verifyHMAC(linkRequest);
+
+        if (socialRepository.findByProviderAndProviderId(linkRequest.getProvider().toLowerCase(Locale.ROOT),
+                linkRequest.getProviderId()).isPresent()) {
+            throw new UserAlreadyExistsException("Вы уже зарегистрированы, сначала отвяжите аккаунт командой /unlink");
+        }
+
+        User user = register(request.getRegisterRequest());
+        Authentication auth = new UsernamePasswordAuthenticationToken(
+                user, null, user.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
+        socialService.linkSocial(linkRequest);
+
+        return new AuthResponse(jwtService.generateToken(user));
+
+    }
+
+    public User loginTelegram(LoginRequestTelegram request) {
+        verifyHMAC(request);
+        return findByProvider("telegram", request.getChatId());
     }
 
     public User findByUsername(String username) {
@@ -87,7 +143,7 @@ public class AuthService {
 
     public User findByProvider(String provider, String providerId) {
         return userRepository.findUserByProvider(provider, providerId)
-                .orElseThrow(() -> new UsernameNotFoundException("Пользователь с данным chatId не найден - необходима аутентификация"));
+                .orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден - необходима авторизация"));
     }
 
     private String toJson(Object payload) {
@@ -96,6 +152,15 @@ public class AuthService {
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Ошибка сериализации", e);
         }
+    }
+
+    private void verifyHMAC(Signable signable) {
+
+        if (!hmacSignatureService.signatureIsValid(signable)) {
+            log.error("Подпись HMAC не совпала при проверке: {}", signable);
+            throw new AuthorizationDeniedException("Не удалось авторизовать пользователя");
+        }
+
     }
 
 }

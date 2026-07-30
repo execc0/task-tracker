@@ -97,7 +97,7 @@ public class AuthService {
 
         if (socialRepository.findByProviderAndProviderId(linkRequest.getProvider().toLowerCase(Locale.ROOT),
                 linkRequest.getProviderId()).isPresent()) {
-            throw new UserAlreadyExistsException("Вы уже зарегистрированы, сначала отвяжите аккаунт командой /unlink");
+            throw new UserAlreadyExistsException("Вы уже авторизованы, сначала отвяжите аккаунт командой /unlink");
         }
 
         login(request.getLoginRequest());

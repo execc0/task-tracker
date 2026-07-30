@@ -32,7 +32,7 @@ public class SocialService {
         User user = userService.getCurrentUser();
         Optional<Social> social = socialRepository.findByProviderAndProviderId(request.getProvider().toLowerCase(Locale.ROOT), request.getProviderId());
         if (social.isPresent()) {
-            if (!social.get().getUser().equals(user)) {
+            if (social.get().getUser().getId() != user.getId()) {
                 throw new SocialLinkException("Данная связь уже существует у другого пользователя");
             }
             return;

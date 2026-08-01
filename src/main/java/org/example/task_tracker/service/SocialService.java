@@ -7,7 +7,6 @@ import org.example.task_tracker.model.User;
 import org.example.task_tracker.repository.SocialRepository;
 import org.example.task_tracker.security.DTO.social.UnlinkSocialRequest;
 import org.example.task_tracker.security.DTO.social.signable.LinkRequest;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -48,7 +47,7 @@ public class SocialService {
                 orElseThrow(() -> new SocialLinkException("Данной связи с вашим аккаунтом не существует"));
         if (social.getUser().getId() != user.getId()) {
             log.debug("CurrentUser: {}, UserRequest: {}", user.getId(), social.getUser().getId());
-            throw new AccessDeniedException("Данной связи с вашим аккаунтом не существует");
+            throw new SocialLinkException("Данной связи с вашим аккаунтом не существует");
         }
         socialRepository.delete(social);
 

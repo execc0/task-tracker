@@ -1,5 +1,6 @@
 package org.example.task_tracker.outbox;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -10,6 +11,7 @@ import java.util.List;
 
 @Component
 @Transactional(readOnly = true)
+@Profile("local")
 public class OutboxScheduler {
 
     private final OutboxRepository outboxRepository;

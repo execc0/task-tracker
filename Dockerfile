@@ -12,6 +12,7 @@ RUN ./gradlew dependencies --no-daemon || true
 
 # Копируем исходники и собираем jar
 COPY . .
+RUN chmod +x gradlew
 RUN ./gradlew bootJar --no-daemon -x test
 
 # Runtime

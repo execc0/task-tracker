@@ -9,6 +9,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -25,6 +26,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
     private final ObjectMapper objectMapper;
     private final Map<String, Bucket> buckets = new ConcurrentHashMap<>();
+    @Value("${internal.api.key}")
+    private String internalApiKey;
 
     public RateLimitFilter(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
@@ -39,6 +42,12 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+
+        String internalKey = request.getHeader("X-Internal-Api-Key");
+
+        if (internalKey != null && internalKey.equals(internalApiKey)) {
+            filterChain.doFilter(request, response);
+        }
 
         String ip = request.getHeader("X-Forwarded-For"); // может быть опасно если нет никакого промежуточного сервера между клиентом и API !!!
         if (ip == null) {

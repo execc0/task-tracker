@@ -3,6 +3,7 @@ package org.example.task_tracker.security.DTO;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
+import lombok.ToString;
 
 @Data
 public class RegisterRequest {
@@ -10,6 +11,7 @@ public class RegisterRequest {
     @NotBlank(message = "Username не может быть пустым")
     private String username;
 
+    @ToString.Exclude
     @NotBlank(message = "Password не может быть пустым")
     private String password;
 

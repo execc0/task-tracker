@@ -47,6 +47,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
         if (internalKey != null && internalKey.equals(internalApiKey)) {
             filterChain.doFilter(request, response);
+            return;
         }
 
         String ip = request.getHeader("X-Forwarded-For"); // может быть опасно если нет никакого промежуточного сервера между клиентом и API !!!

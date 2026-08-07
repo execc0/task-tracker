@@ -187,6 +187,7 @@ public class UserService {
     }
 
     @Transactional
+    @CacheEvict(value = "users", allEntries = true)
     public void deleteOwnUser() {
         User user = getCurrentUser();
         userRepository.deleteById(user.getId());

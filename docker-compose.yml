@@ -1,23 +1,8 @@
 services:
-  app:
-    build: .
-    container_name: task-tracker-app
-    env_file:
-      - .env
-    environment:
-      SPRING_PROFILES_ACTIVE: local
-    ports:
-      - "8080:8080"
-    depends_on:
-      - postgres
-      - redis
-    restart: unless-stopped
-    networks:
-      - shared-network
 
   postgres:
     image: postgres:15
-    container_name: postgres-dev
+    container_name: postgres-dev-local
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -31,7 +16,7 @@ services:
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.4.0
-    container_name: zookeeper
+    container_name: zookeeper-local
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -40,7 +25,7 @@ services:
 
   kafka:
     image: confluentinc/cp-kafka:7.4.0
-    container_name: kafka
+    container_name: kafka-local
     depends_on:
       - zookeeper
     ports:
@@ -55,7 +40,7 @@ services:
 
   redis:
     image: redis:7.2
-    container_name: redis-dev
+    container_name: redis-dev-local
     ports:
       - "6379:6379"
     volumes:

@@ -2,11 +2,13 @@ package org.example.task_tracker.DTO.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class PageResponseDTO<T> {
 
     private List<T> content;        // данные

@@ -1,5 +1,6 @@
 package org.example.task_tracker.DTO.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -20,6 +21,7 @@ public class TaskResponseDTO {
     private LocalDateTime deadline;
     private LocalDateTime createdAt;
     private String description;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private UserResponseDTO user;
 
 }

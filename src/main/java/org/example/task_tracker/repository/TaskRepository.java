@@ -30,4 +30,6 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     @Query("SELECT t FROM Task t LEFT JOIN FETCH t.user WHERE t.user.id = :userId")
     List<Task> findTasksByUserIdWithUser(@Param("userId") Long userId);
 
+    Page<Task> findTasksByUserId(long userId, Pageable pageable);
+
 }

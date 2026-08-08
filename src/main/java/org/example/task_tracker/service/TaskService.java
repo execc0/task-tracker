@@ -71,7 +71,7 @@ public class TaskService {
     @Cacheable("tasks")
     public PageResponseDTO<TaskResponseDTO> getAllTasks(Pageable pageable) {
         Page<Task> taskPage = taskRepository.findAll(pageable);
-        Page<TaskResponseDTO> dtoPage = taskPage.map(task -> taskMapper.toDTO(task));
+        Page<TaskResponseDTO> dtoPage = taskPage.map(task -> taskMapper.toDTO(task, true));
         return new PageResponseDTO<TaskResponseDTO>(
                 dtoPage.getContent(),
                 dtoPage.getNumber(),
@@ -129,12 +129,14 @@ public class TaskService {
     // Всё что ниже - методы, которые вызываются с ролью USER (или ADMIN)
     @Cacheable("available_tasks")
     public List<TaskResponseDTO> getAvailableTasks() {
-        return taskMapper.toDTOList(taskRepository.findTasksByUserIsNull());
+        return taskMapper.toDTOList(taskRepository.findTasksByUserIsNull(), false);
     }
 
-    public List<TaskResponseDTO> getOwnTasks() {
+    public PageResponseDTO<TaskResponseDTO> getOwnTasks(Pageable pageable) {
         User user = userService.getCurrentUser();
-        return taskMapper.toDTOList(taskRepository.findTasksByUserIdWithUser(user.getId()));
+        Page<Task> taskPage = (taskRepository.findTasksByUserId(user.getId(), pageable));
+        Page<TaskResponseDTO> dtoPage = taskPage.map(task -> taskMapper.toDTO(task, false));
+        return new PageResponseDTO<>(dtoPage);
     }
 
     public TaskResponseDTO getOwnTask(Long id) {

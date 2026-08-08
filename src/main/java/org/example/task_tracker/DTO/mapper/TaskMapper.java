@@ -14,7 +14,7 @@ public class TaskMapper {
         this.userMapper = userMapper;
     }
 
-    public TaskResponseDTO toDTO(Task task) {
+    public TaskResponseDTO toDTO(Task task, boolean includeUser) {
         TaskResponseDTO taskResponseDTO = new TaskResponseDTO();
         taskResponseDTO.setTitle(task.getTitle());
         taskResponseDTO.setDescription(task.getDescription());
@@ -23,15 +23,23 @@ public class TaskMapper {
         taskResponseDTO.setCreatedAt(task.getCreatedAt());
         taskResponseDTO.setDeadline(task.getDeadline());
         taskResponseDTO.setId(task.getId());
-        if (task.getUser() != null) {
+        if (includeUser && task.getUser() != null) {
             taskResponseDTO.setUser(userMapper.toDTO(task.getUser()));
         }
         return taskResponseDTO;
     }
 
-    public List<TaskResponseDTO> toDTOList(List<Task> taskList) {
+    public List<TaskResponseDTO> toDTOList(List<Task> taskList, boolean includeUser) {
         return taskList.stream()
-                .map(task -> toDTO(task))
+                .map(task -> toDTO(task, includeUser))
                 .toList();
+    }
+
+    public List<TaskResponseDTO> toDTOList(List<Task> taskList) {
+        return toDTOList(taskList, false);
+    }
+
+    public TaskResponseDTO toDTO(Task task) {
+        return toDTO(task, false);
     }
 }

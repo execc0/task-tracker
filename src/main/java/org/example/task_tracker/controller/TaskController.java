@@ -86,8 +86,11 @@ public class TaskController {
     }
 
     @GetMapping("/my")
-    public List<TaskResponseDTO> getOwnTasks() {
-        return taskService.getOwnTasks();
+    public PageResponseDTO<TaskResponseDTO> getOwnTasks(@PageableDefault(
+            size = 5,
+            sort = "createdAt",
+            direction = Sort.Direction.DESC) Pageable pageable) {
+        return taskService.getOwnTasks(pageable);
     }
 
     @GetMapping("/my/{id}")

@@ -161,7 +161,7 @@ public class TaskService {
         task.setUser(user);
         Task saved = taskRepository.save(task);
         log.info("Created new task taskId = {}, title = {} for user userId = {}", saved.getId(), saved.getTitle(), saved.getId());
-        return taskMapper.toDTO(saved);
+        return taskMapper.toDTO(saved, true);
 
     }
 

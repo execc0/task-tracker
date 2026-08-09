@@ -52,7 +52,7 @@ public class GlobalExceptionHandler {
         List<String> errors = e.getBindingResult()
                 .getFieldErrors()
                 .stream()
-                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .map(error -> error.getDefaultMessage())
                 .toList();
         map.put("errors", errors);
         return new ResponseEntity<>(map, HttpStatus.BAD_REQUEST);

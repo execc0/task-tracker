@@ -71,6 +71,12 @@ public class UserController {
     }
 
     // Всё что ниже - эндпоинты для USER (ADMIN тоже доступны).
+
+    @GetMapping("/me")
+    public UserResponseDTO getOwnUser() {
+        return userService.getOwnUser();
+    }
+
     @PatchMapping("/me/username")
     public UserResponseDTO updateOwnUsername(@RequestParam @Pattern(regexp = "^[a-zA-Z0-9_!@#$%&*()+=/:;|~.-]+$",
             message = "Username может содержать только латинские буквы, цифры и спецсимволы")

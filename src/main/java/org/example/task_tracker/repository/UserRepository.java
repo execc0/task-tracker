@@ -19,4 +19,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("SELECT s.user FROM Social s WHERE s.provider=:provider AND s.providerId=:providerId")
     Optional<User> findUserByProvider(String provider, String providerId);
+
+
 }

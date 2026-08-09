@@ -195,6 +195,10 @@ public class UserService {
         log.info("User userId = {} deleted", user.getId());
     }
 
+    public UserResponseDTO getOwnUser() {
+        return userMapper.toDTO(getCurrentUser());
+    }
+
     protected User getCurrentUser() {
         User user = (User) SecurityContextHolder.getContext()
                 .getAuthentication()

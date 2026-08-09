@@ -177,8 +177,8 @@ public class UserService {
 
     @Transactional
     public UserResponseDTO updateOwnPassword(@NotBlank String password) {
-        if (password == null || password.length() < 8)
-            throw new IllegalArgumentException("Пароль должен быть не менее 8 символов");
+        if (password == null || password.length() < 8 || password.length() > 64)
+            throw new IllegalArgumentException("Пароль должен быть не менее 8 символов и не более 64 символов");
         User user = getCurrentUser();
         user.setPassword(passwordEncoder.encode(password));
         User saved = userRepository.save(user);

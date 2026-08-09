@@ -3,6 +3,7 @@ package org.example.task_tracker.controller;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import org.example.task_tracker.DTO.response.AdminUserResponseDTO;
 import org.example.task_tracker.DTO.response.PageResponseDTO;
 import org.example.task_tracker.DTO.response.UserResponseDTO;
@@ -71,7 +72,9 @@ public class UserController {
 
     // Всё что ниже - эндпоинты для USER (ADMIN тоже доступны).
     @PatchMapping("/me/username")
-    public UserResponseDTO updateOwnUsername(@RequestParam @NotBlank(message = "Username не может быть пустым") String username) {
+    public UserResponseDTO updateOwnUsername(@RequestParam @Pattern(regexp = "^[a-zA-Z0-9_!@#$%&*()+=/:;|~.-]+$",
+            message = "Username может содержать только латинские буквы, цифры и спецсимволы")
+                                             @NotBlank(message = "Username не может быть пустым") String username) {
         return userService.updateOwnUsername(username);
     }
 
@@ -86,7 +89,9 @@ public class UserController {
     }
 
     @PatchMapping("/me/name")
-    public UserResponseDTO updateOwnName(@RequestParam @NotBlank(message = "Имя не может быть пустым") String name) {
+    public UserResponseDTO updateOwnName(@RequestParam @Pattern(regexp = "^[a-zA-Z0-9_!@#$%&*()+=/:;|~.-]+$",
+            message = "Имя может содержать только латинские буквы, цифры и спецсимволы")
+                                         @NotBlank(message = "Имя не может быть пустым") String name) {
         return userService.updateOwnName(name);
     }
 

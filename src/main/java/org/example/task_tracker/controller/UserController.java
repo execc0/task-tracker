@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import org.example.task_tracker.DTO.response.AdminUserResponseDTO;
 import org.example.task_tracker.DTO.response.PageResponseDTO;
 import org.example.task_tracker.DTO.response.UserResponseDTO;
@@ -85,12 +86,16 @@ public class UserController {
     }
 
     @PatchMapping("/me/email")
-    public UserResponseDTO updateOwnEmail(@RequestParam @NotBlank(message = "Email не может быть пустым") @Email(message = "Неверный формат email") String email) {
+    public UserResponseDTO updateOwnEmail(@RequestParam
+                                          @NotBlank(message = "Email не может быть пустым")
+                                          @Email(message = "Неверный формат email") String email) {
         return userService.updateOwnEmail(email);
     }
 
     @PatchMapping("/me/password")
-    public UserResponseDTO updateOwnPassword(@RequestParam @NotBlank(message = "Password не может быть пустым") String password) {
+    public UserResponseDTO updateOwnPassword(@RequestParam
+                                             @Size(min = 8, max = 64, message = "Длина пароля должна составлять от 8 до 64 символов")
+                                             @NotBlank(message = "Пароль не может быть пустым") String password) {
         return userService.updateOwnPassword(password);
     }
 

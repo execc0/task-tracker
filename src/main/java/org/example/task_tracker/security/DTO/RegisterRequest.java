@@ -16,8 +16,8 @@ public class RegisterRequest {
     private String username;
 
     @ToString.Exclude
-    @Size(min = 8, max = 64, message = "Пароль должен быть от 8 до 64 символов")
     @NotBlank(message = "Пароль не может быть пустым")
+    @Size(min = 8, max = 64, message = "Длина пароля должна составлять от 8 до 64 символов")
     private String password;
 
     @NotBlank(message = "Имя не может быть пустым")

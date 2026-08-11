@@ -194,10 +194,7 @@ public class TaskService {
         }
         task.setStatus(newStatus);
         Task saved = taskRepository.save(task);
-        TaskStatusPayload payload = new TaskStatusPayload(saved.getId(), saved.getStatus().toString(), user.getId(), user.getEmail());
-        String payloadJson = toJson(payload);
-        OutboxEvent outboxEvent = new OutboxEvent(KafkaTopics.TASK_STATUS_CHANGED, Long.toString(saved.getId()), payloadJson);
-        outboxRepository.save(outboxEvent);
+        saveToOutbox(saved);
         log.info("Task taskId = {} changed status to {} by userId = {}", saved.getId(), saved.getStatus(), user.getId());
         return taskMapper.toDTO(saved);
     }
@@ -252,6 +249,16 @@ public class TaskService {
             log.warn("Attempt to set status IN_PROGRESS to TODO of task with taskId = {}", taskId);
             throw new IllegalStateException("Нельзя изменить статус задачи с IN PROGRESS на TODO");
         }
+    }
+
+    private void saveToOutbox(Task saved) {
+
+        User user = userService.getCurrentUser();
+        TaskStatusPayload payload = new TaskStatusPayload(saved.getId(), saved.getStatus().toString(), user.getId(), user.getEmail());
+        String payloadJson = toJson(payload);
+        OutboxEvent outboxEvent = new OutboxEvent(KafkaTopics.TASK_STATUS_CHANGED, Long.toString(saved.getId()), payloadJson);
+        outboxRepository.save(outboxEvent);
+
     }
 
     private String toJson(Object payload) {

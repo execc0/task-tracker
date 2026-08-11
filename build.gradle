@@ -36,6 +36,9 @@ dependencies {
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0'
     implementation 'com.github.vladimir-bukhtoyarov:bucket4j-core:8.0.1'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'io.sentry:sentry-spring-boot-starter-jakarta:7.20.0'
+    implementation 'io.sentry:sentry-logback:7.20.0'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
 }
 
 tasks.named('test') {

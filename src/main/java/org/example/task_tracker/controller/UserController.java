@@ -100,8 +100,8 @@ public class UserController {
     }
 
     @PatchMapping("/me/name")
-    public UserResponseDTO updateOwnName(@RequestParam @Pattern(regexp = "^[a-zA-Z0-9_!@#$%&*()+=/:;|~.-]+$",
-            message = "Имя может содержать только латинские буквы, цифры и спецсимволы")
+    public UserResponseDTO updateOwnName(@RequestParam @Pattern(regexp = "^[ а-яА-ЯёЁa-zA-Z0-9_!@#$%&*()+=/:;|~.-]+$",
+            message = "Имя может содержать латинские буквы, кириллицу, цифры и спецсимволы")
                                          @NotBlank(message = "Имя не может быть пустым") String name) {
         return userService.updateOwnName(name);
     }

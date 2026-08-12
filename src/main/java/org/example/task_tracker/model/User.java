@@ -27,7 +27,7 @@ public class User implements UserDetails {
     @NotBlank(message = "Имя пользователя не может быть пустым")
     private String name;
 
-    @Column(unique = true, updatable = false)
+    @Column(unique = true)
     @NotBlank(message = "Email не может быть пустым")
     @Email(message = "Неверный формат email")
     private String email;

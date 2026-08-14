@@ -51,13 +51,13 @@ public class UserService {
     }
 
     // Методы, которые вызываются только с ролью ADMIN
+    @Cacheable(value = "usersAdmin", key = "#id")
     public AdminUserResponseDTO getUserById(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Неверно указан id пользователя"));
         return userMapper.toAdminDTO(user);
     }
 
-    @Cacheable("users")
     public PageResponseDTO<AdminUserResponseDTO> getAllUsers(@NonNull Pageable pageable) {
         Page<User> userPage = userRepository.findAll(pageable);
         Page<AdminUserResponseDTO> dtoPage = userPage.map(user -> userMapper.toAdminDTO(user));
@@ -72,8 +72,8 @@ public class UserService {
 
     @Transactional
     @Caching(evict = {
-            @CacheEvict(value = "tasks", allEntries = true),
-            @CacheEvict(value = "users", allEntries = true)
+            @CacheEvict(value = "users", key = "#id"),
+            @CacheEvict(value = "usersAdmin", key = "#id")
     })
     public UserResponseDTO updateUserEmail(@NotBlank @Email String email, Long id) {
         User currentUser = getCurrentUser();
@@ -91,8 +91,8 @@ public class UserService {
 
     @Transactional
     @Caching(evict = {
-            @CacheEvict(value = "tasks", allEntries = true),
-            @CacheEvict(value = "users", allEntries = true)
+            @CacheEvict(value = "users", key = "#id"),
+            @CacheEvict(value = "usersAdmin", key = "#id")
     })
     public UserResponseDTO updateUserName(@NotBlank String name, Long id) {
         User currentUser = getCurrentUser();
@@ -104,7 +104,7 @@ public class UserService {
     }
 
     @Transactional
-    @CacheEvict(value = "users", allEntries = true)
+    @CacheEvict(value = "usersAdmin", key = "#id")
     public UserResponseDTO updateUserRole(Role role, Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Пользователь с данным id не найден"));
@@ -117,8 +117,8 @@ public class UserService {
 
     @Transactional
     @Caching(evict = {
-            @CacheEvict(value = "tasks", allEntries = true),
-            @CacheEvict(value = "users", allEntries = true)
+            @CacheEvict(value = "users", key = "#id"),
+            @CacheEvict(value = "usersAdmin", key = "#id")
     })
     public void deleteUserById(Long id) {
         User user = userRepository.findById(id)
@@ -131,8 +131,8 @@ public class UserService {
     // Всё что ниже - методы, которые вызываются с ролью USER (или ADMIN)
     @Transactional
     @Caching(evict = {
-            @CacheEvict(value = "tasks", allEntries = true),
-            @CacheEvict(value = "users", allEntries = true)
+            @CacheEvict(value = "users", key = "#root.target.getCurrentUser().getId()"),
+            @CacheEvict(value = "usersAdmin", key = "#root.target.getCurrentUser().getId()")
     })
     public UserResponseDTO updateOwnEmail(@NotBlank String email) {
         if (isEmailTaken(email)) {
@@ -148,8 +148,8 @@ public class UserService {
 
     @Transactional
     @Caching(evict = {
-            @CacheEvict(value = "tasks", allEntries = true),
-            @CacheEvict(value = "users", allEntries = true)
+            @CacheEvict(value = "users", key = "#root.target.getCurrentUser().getId()"),
+            @CacheEvict(value = "usersAdmin", key = "#root.target.getCurrentUser().getId()")
     })
     public UserResponseDTO updateOwnUsername(@NotBlank String username) {
         if (isUsernameTaken(username)) {
@@ -165,7 +165,10 @@ public class UserService {
     }
 
     @Transactional
-    @CacheEvict(value = "users", allEntries = true)
+    @Caching(evict = {
+            @CacheEvict(value = "users", key = "#root.target.getCurrentUser().getId()"),
+            @CacheEvict(value = "usersAdmin", key = "#root.target.getCurrentUser().getId()")
+    })
     public UserResponseDTO updateOwnName(@NotBlank String name) {
         User user = getCurrentUser();
         String oldName = user.getName();
@@ -187,7 +190,10 @@ public class UserService {
     }
 
     @Transactional
-    @CacheEvict(value = "users", allEntries = true)
+    @Caching(evict = {
+            @CacheEvict(value = "users", key = "#root.target.getCurrentUser().getId()"),
+            @CacheEvict(value = "usersAdmin", key = "#root.target.getCurrentUser().getId()")
+    })
     public void deleteOwnUser() {
         User user = getCurrentUser();
         userRepository.deleteById(user.getId());
@@ -195,11 +201,12 @@ public class UserService {
         log.info("User userId = {} deleted", user.getId());
     }
 
+    @Cacheable(value = "users", key = "#root.target.getCurrentUser().getId()")
     public UserResponseDTO getOwnUser() {
         return userMapper.toDTO(getCurrentUser());
     }
 
-    protected User getCurrentUser() {
+    public User getCurrentUser() {
         User user = (User) SecurityContextHolder.getContext()
                 .getAuthentication()
                 .getPrincipal();

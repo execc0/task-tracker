@@ -18,6 +18,7 @@ import org.example.task_tracker.outbox.OutboxRepository;
 import org.example.task_tracker.outbox.payload.TaskStatusPayload;
 import org.example.task_tracker.repository.TaskRepository;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
@@ -51,8 +52,9 @@ public class TaskService {
 
     // Методы, которые вызываются только с ролью ADMIN
     @Transactional
+    @CachePut(value = "tasks", key = "#result.id")
     @Caching(evict = {
-            @CacheEvict(value = "tasks", allEntries = true),
+            @CacheEvict(value = "userTasksPage", allEntries = true),
             @CacheEvict(value = "availableTasks", allEntries = true)
     })
     public TaskResponseDTO createTask(@Valid Task task) {
@@ -62,13 +64,13 @@ public class TaskService {
         return taskMapper.toDTO(saved);
     }
 
+    @Cacheable(value = "tasks", key = "#id")
     public TaskResponseDTO getTaskById(Long id) {
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Задача не найдена - указан неверный id"));
         return taskMapper.toDTO(task);
     }
 
-    @Cacheable("tasks")
     public PageResponseDTO<TaskResponseDTO> getAllTasks(Pageable pageable) {
         Page<Task> taskPage = taskRepository.findAll(pageable);
         Page<TaskResponseDTO> dtoPage = taskPage.map(task -> taskMapper.toDTO(task, true));
@@ -83,7 +85,8 @@ public class TaskService {
 
     @Transactional
     @Caching(evict = {
-            @CacheEvict(value = "tasks", allEntries = true),
+            @CacheEvict(value = "tasks", key = "#id"),
+            @CacheEvict(value = "userTasksPage", allEntries = true),
             @CacheEvict(value = "availableTasks", allEntries = true)
     })
     public void deleteTask(Long id) {
@@ -94,7 +97,8 @@ public class TaskService {
 
     @Transactional
     @Caching(evict = {
-            @CacheEvict(value = "tasks", allEntries = true),
+            @CacheEvict(value = "tasks", key = "#id"),
+            @CacheEvict(value = "userTasksPage", allEntries = true),
             @CacheEvict(value = "availableTasks", allEntries = true)
     })
     public TaskResponseDTO updateTask(Long id, @Valid Task updatedTask) {
@@ -109,7 +113,11 @@ public class TaskService {
     }
 
     @Transactional
-    @CacheEvict(value = "tasks", allEntries = true)
+    @Caching(evict = {
+            @CacheEvict(value = "tasks", key = "#id"),
+            @CacheEvict(value = "userTasksPage", allEntries = true),
+            @CacheEvict(value = "availableTasks", allEntries = true)
+    })
     public TaskResponseDTO updateTaskStatus(Long id, Status status) {
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Задача не найдена - указан неверный id"));
@@ -127,11 +135,12 @@ public class TaskService {
 
 
     // Всё что ниже - методы, которые вызываются с ролью USER (или ADMIN)
-    @Cacheable("available_tasks")
+    @Cacheable("availableTasks")
     public List<TaskResponseDTO> getAvailableTasks() {
         return taskMapper.toDTOList(taskRepository.findTasksByUserIsNull(), false);
     }
 
+    @Cacheable(value = "userTasksPage", key = "#root.target.currentUserId() + '_' + #pageable")
     public PageResponseDTO<TaskResponseDTO> getOwnTasks(Pageable pageable) {
         User user = userService.getCurrentUser();
         Page<Task> taskPage = (taskRepository.findTasksByUserId(user.getId(), pageable));
@@ -150,7 +159,10 @@ public class TaskService {
     }
 
     @Transactional
-    @CacheEvict(value = "tasks", allEntries = true)
+    @Caching(evict = {
+            @CacheEvict(value = "userTasksPage", allEntries = true),
+    })
+    @CachePut(value = "tasks", key = "#result.id")
     public TaskResponseDTO createOwnTask(@Valid Task task) {
         User user = userService.getCurrentUser();
         Long taskCount = taskRepository.countTasksByUserIdAndStatusIn(user.getId(), List.of(Status.TODO, Status.IN_PROGRESS));
@@ -166,7 +178,10 @@ public class TaskService {
     }
 
     @Transactional
-    @CacheEvict(value = "tasks", allEntries = true)
+    @Caching(evict = {
+            @CacheEvict(value = "userTasksPage", allEntries = true),
+    })
+    @CachePut(value = "tasks", key = "#result.id")
     public TaskResponseDTO updateOwnTask(Long id, @Valid Task updatedTask) {
         Task taskToUpdate = taskRepository.findTaskById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Задача не найдена - указан неверный id"));
@@ -182,7 +197,10 @@ public class TaskService {
     }
 
     @Transactional
-    @CacheEvict(value = "tasks", allEntries = true)
+    @Caching(evict = {
+            @CacheEvict(value = "userTasksPage", allEntries = true),
+    })
+    @CachePut(value = "tasks", key = "#result.id")
     public TaskResponseDTO updateOwnTaskStatus(Long id, Status newStatus) {
         Task task = taskRepository.findTaskById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Задача не найдена - указан неверный id"));
@@ -201,9 +219,10 @@ public class TaskService {
 
     @Transactional
     @Caching(evict = {
-            @CacheEvict(value = "tasks", allEntries = true),
-            @CacheEvict(value = "availableTasks", allEntries = true)
+            @CacheEvict(value = "availableTasks", allEntries = true),
+            @CacheEvict(value = "userTasksPage", allEntries = true),
     })
+    @CachePut(value = "tasks", key = "#id")
     public TaskResponseDTO takeAvailableTask(Long id) {
         Task task = taskRepository.findTaskById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Задача не найдена - указан неверный id"));
@@ -219,7 +238,10 @@ public class TaskService {
     }
 
     @Transactional
-    @CacheEvict(value = "tasks", allEntries = true)
+    @Caching(evict = {
+            @CacheEvict(value = "tasks", key = "#id"),
+            @CacheEvict(value = "userTasksPage", allEntries = true)
+    })
     public void deleteOwnTask(Long id) {
         User user = userService.getCurrentUser();
         Task task = taskRepository.findTaskById(id)
@@ -229,6 +251,10 @@ public class TaskService {
         }
         taskRepository.deleteById(id);
         log.info("Task with title = {}, taskId = {} deleted by user with id = {}", task.getTitle(), id, user.getId());
+    }
+
+    public Long currentUserId() {
+        return userService.getCurrentUser().getId();
     }
 
     protected Task updateTaskFields(Task taskToUpdate, Task updatedTask) {

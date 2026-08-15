@@ -2,8 +2,16 @@
 
 REST API для управления задачами, написанный в учебных целях с упором на реальные практики разработки на Java/Spring Boot.
 
-🔗 [GitHub Repository](https://github.com/execc0/task-tracker)
+Swagger для тестирования API доступен по ссылке - https://execc.mooo.com/app/swagger-ui/index.html
+
+Либо же, что более удобно - воспользуйтесь телеграм ботом - https://t.me/TaskTrackerTGBot (однако в боте на данный момент реализованы не все функции)
+
+### Связанные проекты:
+> **Task Tracker TGBot** - телеграм бот для Task Tracker, выступает в качестве клиента основного API, хранит авторизационные токены и выполняеят запросы от лица пользователя. Репозиторий: https://github.com/execc0/task-tracker-TGBot
+
 >  **Notification Service** — отдельный сервис, который слушает события Task Tracker через Apache Kafka (изменение статуса задачи, регистрация и удаление пользователя) и отправляет email-уведомления. Репозиторий: [github.com/execc0/notification-service](https://github.com/execc0/notification-service).
+
+> **Task Tracker monitoring** - Prometheus, Node Exported и Grafana для сбора и показа метрик. Репозиторий: https://github.com/execc0/task-tracker-monitoring
 ---
 
 ## 🚀 Стек технологий

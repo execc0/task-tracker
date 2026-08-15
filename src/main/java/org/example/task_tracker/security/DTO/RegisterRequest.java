@@ -21,7 +21,7 @@ public class RegisterRequest {
     private String password;
 
     @NotBlank(message = "Имя не может быть пустым")
-    @Pattern(regexp = "^[a-zA-Z0-9_!@#$%&*()+=/:;|~.-]+$", message = "Имя может содержать только латинские буквы, цифры и спецсимволы")
+    @Pattern(regexp = "^[ а-яА-ЯёЁa-zA-Z0-9_!@#$%&*()+=/:;|~.-]+$", message = "Имя может содержать кириллицу, латинские буквы, цифры и спецсимволы")
     private String name;
 
     @NotBlank(message = "Email не может быть пустым")

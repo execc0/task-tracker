@@ -7,6 +7,7 @@ import org.example.task_tracker.DTO.response.TaskResponseDTO;
 import org.example.task_tracker.model.Status;
 import org.example.task_tracker.model.Task;
 import org.example.task_tracker.service.TaskService;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -29,7 +30,7 @@ public class TaskController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public PageResponseDTO<TaskResponseDTO> getAllTasks(@PageableDefault(
+    public PageResponseDTO<TaskResponseDTO> getAllTasks(@ParameterObject @PageableDefault(
             size = 10,
             sort = "createdAt",
             direction = Sort.Direction.DESC) Pageable pageable) {
@@ -86,7 +87,7 @@ public class TaskController {
     }
 
     @GetMapping("/my")
-    public PageResponseDTO<TaskResponseDTO> getOwnTasks(@PageableDefault(
+    public PageResponseDTO<TaskResponseDTO> getOwnTasks(@ParameterObject @PageableDefault(
             size = 5,
             sort = "createdAt",
             direction = Sort.Direction.DESC) Pageable pageable) {

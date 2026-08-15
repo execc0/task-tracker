@@ -10,6 +10,7 @@ import org.example.task_tracker.DTO.response.PageResponseDTO;
 import org.example.task_tracker.DTO.response.UserResponseDTO;
 import org.example.task_tracker.model.Role;
 import org.example.task_tracker.service.UserService;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -32,7 +33,7 @@ public class UserController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public PageResponseDTO<AdminUserResponseDTO> getAllUsers(@PageableDefault(
+    public PageResponseDTO<AdminUserResponseDTO> getAllUsers(@ParameterObject @PageableDefault(
             size = 10,
             page = 0,
             sort = "id",

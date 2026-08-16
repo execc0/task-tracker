@@ -12,6 +12,7 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.HashMap;
 import java.util.List;
@@ -35,6 +36,14 @@ public class GlobalExceptionHandler {
         map.put("status", 405);
         map.put("message", e.getMessage());
         return new ResponseEntity<>(map, HttpStatus.METHOD_NOT_ALLOWED);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<?> handleArgumentMismatch(MethodArgumentTypeMismatchException e) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("status", 400);
+        map.put("message", "Неверный формат одного из переданных аргументов");
+        return new ResponseEntity<>(map, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)

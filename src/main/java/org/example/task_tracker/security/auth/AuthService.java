@@ -66,17 +66,14 @@ public class AuthService {
         if (userRepository.findUserByUsername(request.getUsername()).isPresent()) {
             throw new UserAlreadyExistsException("Пользователь с данным username уже зарегистрирован!");
         }
-        if (userRepository.findUserByEmail(request.getEmail()).isPresent()) {
+        if (request.getEmail() != null && !request.getEmail().isBlank() && userRepository.findUserByEmail(request.getEmail()).isPresent()) {
             throw new UserAlreadyExistsException("Пользователь с данным email уже зарегистрирован!");
         }
         if (request.getPassword() == null || request.getPassword().length() < 8)
             throw new IllegalStateException("Пароль должен быть не менее 8 символов");
         User user = new User(request.getName(), request.getEmail(), request.getUsername(), passwordEncoder.encode(request.getPassword()));
         User saved = userRepository.save(user);
-        UserPayload payload = new UserPayload(user.getUsername(), user.getName(), user.getEmail());
-        String jsonPayload = toJson(payload);
-        OutboxEvent outboxEvent = new OutboxEvent(KafkaTopics.USER_REGISTERED, user.getUsername(), jsonPayload);
-        outboxRepository.save(outboxEvent);
+        writeToOutbox(user);
         log.info("New user registered, username = {}, name = {}",
                 saved.getUsername(), saved.getName());
         return saved;
@@ -160,6 +157,15 @@ public class AuthService {
             log.error("Подпись HMAC не совпала при проверке: {}", signable);
             throw new AuthorizationDeniedException("Не удалось авторизовать пользователя");
         }
+
+    }
+
+    private void writeToOutbox(User user) {
+
+        UserPayload payload = new UserPayload(user.getUsername(), user.getName(), user.getEmail());
+        String jsonPayload = toJson(payload);
+        OutboxEvent outboxEvent = new OutboxEvent(KafkaTopics.USER_REGISTERED, user.getUsername(), jsonPayload);
+        outboxRepository.save(outboxEvent);
 
     }
 

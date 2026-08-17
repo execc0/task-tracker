@@ -23,8 +23,7 @@ public class RegisterRequest {
     @NotBlank(message = "Имя не может быть пустым")
     @Pattern(regexp = "^[ а-яА-ЯёЁa-zA-Z0-9_!@#$%&*()+=/:;|~.-]+$", message = "Имя может содержать кириллицу, латинские буквы, цифры и спецсимволы")
     private String name;
-
-    @NotBlank(message = "Email не может быть пустым")
+    
     @Email(message = "Неверно указан формат email")
     private String email;
 }
